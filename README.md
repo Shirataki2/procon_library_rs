@@ -34,11 +34,13 @@
     - Strongly Connected Components
         - 強連結成分分解
     - Topological Sort
-        - とぽそ
+        - トポロジカルソート
     - Warshall Floyd
-        - ライブラリ化するほどですかね
+        - ワーシャルフロイド
 
 - Math
+    - Complex
+        - 複素数
     - Divisor
         - 約数列挙
     - Factorize
