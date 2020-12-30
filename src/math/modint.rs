@@ -1,7 +1,3 @@
-#![allow(dead_code)]
-use cargo_snippet::snippet;
-
-#[snippet]
 pub mod modint {
     use std::cell::RefCell;
     use std::ops::*;
