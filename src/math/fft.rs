@@ -1,5 +1,4 @@
-//! Verified [AtCoder Typical Contest 001 C - 高速フーリエ変換](https://atcoder.jp/contests/atc001/submissions/19075529)
-// TODO: バタフライ演算で高速化
+//! Verified [AtCoder Typical Contest 001 C - 高速フーリエ変換](https://atcoder.jp/contests/atc001/submissions/19077522)
 use crate::math::complex::complex;
 
 pub mod fft {
@@ -8,19 +7,29 @@ pub mod fft {
     pub struct FastFourierTransform;
 
     impl FastFourierTransform {
+        fn bit_reverse(f: &mut Vec<Complex>) {
+            let mut i = 0;
+            for j in 1..f.len()-1 {
+                let mut k = f.len() >> 1;
+                while { i ^= k; k > i } { k >>= 1; }
+                if i > j { f.swap(i, j); }
+            }
+        }
+
         fn dft(f: &mut Vec<Complex>, inverse: bool) {
             let n = f.len();
-            if n == 1 { return }
             let pi = std::f64::consts::PI * if inverse { -1.0 } else { 1.0 };
-            let mut f0 = f.iter().skip(0).step_by(2).copied().collect::<Vec<_>>();
-            let mut f1 = f.iter().skip(1).step_by(2).copied().collect::<Vec<_>>();
-            Self::dft(&mut f0, inverse);
-            Self::dft(&mut f1, inverse);
-            let mut a = Complex(1.0, 0.0);
-            let zeta = Complex::from_polar(1.0f64, 2.0 * pi / (n as f64));
-            for i in 0..n {
-                f[i] = f0[i % (n / 2)] + a * f1[i % (n / 2)];
-                a *= zeta;
+            FastFourierTransform::bit_reverse(f);
+            for i in (0..).map(|i| 1 << i).take_while(|&i| i < n) {
+                for k in 0..i {
+                    let w = Complex::from_polar(1.0, k as f64 * pi / i as f64);
+                    for j in (0..).map(|j| 2 * i * j).take_while(|&j| j < n) {
+                        let s = f[j + k];
+                        let t = f[j + k + i] * w;
+                        f[j + k] = s + t;
+                        f[j + k + i] = s - t;
+                    }
+                }
             }
         }
 
@@ -52,5 +61,17 @@ mod tests {
         let g = vec![0.0, 1.0, 2.0, 4.0, 8.0];
         let x = FastFourierTransform::multiply(f, g).iter().map(|x| x.round() as i64).collect::<Vec<_>>();
         assert_eq!(x, vec![0, 0, 1, 4, 11, 26, 36, 40, 32, 0, 0]);
+    }
+
+    #[test]
+    fn test_bit_reverse() {
+        let mut v = vec![1, 2, 4, 8, 16, 32, 64, 128];
+        let mut i = 0;
+        for j in 1..v.len()-1 {
+            let mut k = v.len() >> 1;
+            while { i ^= k; k > i } { k >>= 1; }
+            if i > j { v.swap(i, j); }
+        }
+        assert_eq!(v, vec![1, 16, 4, 64, 2, 32, 8, 128]);
     }
 }
