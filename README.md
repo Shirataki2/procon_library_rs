@@ -1,6 +1,6 @@
 # Rust Competitive Programming Library
 
-こっちがあたらしいほう
+![Test](https://github.com/Shirataki2/procon_library_rs/workflows/Test/badge.svg?branch=main)
 
 ## なかみ
 
