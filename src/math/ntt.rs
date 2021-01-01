@@ -1,3 +1,5 @@
+//! Verified [AtCoder Typical Contest 001 C - 高速フーリエ変換](https://atcoder.jp/contests/atc001/submissions/19095995)
+
 pub mod ntt {
     use std::marker::PhantomData;
     use std::ops::*;
@@ -7,36 +9,11 @@ pub mod ntt {
     pub trait ModuloPrimitive {
         fn modulo() -> Num;
         fn primitive_root() -> Num;
-
-        fn add(mut x: Num, y: Num) -> Num {
-            x += y;
-            if x >= Self::modulo() {
-                x -= Self::modulo();
-            }
-            x
-        }
-
-        fn mul(x: Num, y: Num) -> Num {
-            ((x as i128) * (y as i128) % Self::modulo() as i128) as i64
-        }
-
-        fn pow(mut x: Num, mut n: Num) -> Num {
-            let mut res = 1;
-            while n > 0 {
-                if n & 1 > 0 { res = Self::mul(res, x); }
-                x = Self::mul(x, x);
-                n >>= 1;
-            }
-            res
-        }
-
-        fn inv(x: Num) -> Num {
-            Self::pow(x, Self::modulo() - 2)
-        }
     }
 
     macro_rules! define_modulo_primitive {
         ($name:ident, $mod:expr, $proot:expr) => {
+            #[derive(Debug)]
             pub struct $name;
             impl ModuloPrimitive for $name {
                 fn modulo() -> i64 { $mod }
@@ -52,7 +29,16 @@ pub mod ntt {
     define_modulo_primitive!(Mod469762049, 469762049, 3);
     define_modulo_primitive!(Mod1224736769, 1224736769, 3);
 
+    #[derive(Debug)]
     pub struct ModInt<M>(Num, PhantomData<M>);
+
+    impl<M> Clone for ModInt<M> {
+        fn clone(&self) -> ModInt<M> {
+            ModInt(self.0, PhantomData)
+        }
+    }
+
+    impl<M> Copy for ModInt<M> {}
 
     impl<M: ModuloPrimitive> ModInt<M> {
         pub fn new<T>(v: T) -> ModInt<M>
@@ -128,6 +114,15 @@ pub mod ntt {
         }
     }
 
+    impl<M> AddAssign for ModInt<M>
+    where
+        M: ModuloPrimitive
+    {
+        fn add_assign(&mut self, rhs: ModInt<M>) {
+            *self += rhs.value();
+        }
+    }
+
     impl<T, M> Add<T> for ModInt<M>
     where
         Num: From<T>,
@@ -137,6 +132,30 @@ pub mod ntt {
         fn add(self, rhs: T) -> Self::Output {
             let mut res = self;
             res += rhs;
+            res
+        }
+    }
+
+    impl<M> Add for ModInt<M>
+    where
+        M: ModuloPrimitive
+    {
+        type Output = ModInt<M>;
+        fn add(self, rhs: ModInt<M>) -> Self::Output {
+            let mut res = self;
+            res += rhs.value();
+            res
+        }
+    }
+
+    impl<M> Add<ModInt<M>> for Num
+    where
+        M: ModuloPrimitive
+    {
+        type Output = ModInt<M>;
+        fn add(self, rhs: ModInt<M>) -> Self::Output {
+            let mut res = ModInt::<M>::new(self);
+            res += rhs.value();
             res
         }
     }
@@ -161,6 +180,15 @@ pub mod ntt {
         }
     }
 
+    impl<M> SubAssign for ModInt<M>
+    where
+        M: ModuloPrimitive
+    {
+        fn sub_assign(&mut self, rhs: ModInt<M>) {
+            *self -= rhs.value();
+        }
+    }
+
     impl<T, M> Sub<T> for ModInt<M>
     where
         Num: From<T>,
@@ -170,6 +198,30 @@ pub mod ntt {
         fn sub(self, rhs: T) -> Self::Output {
             let mut res = self;
             res -= rhs;
+            res
+        }
+    }
+
+    impl<M> Sub for ModInt<M>
+    where
+        M: ModuloPrimitive
+    {
+        type Output = ModInt<M>;
+        fn sub(self, rhs: ModInt<M>) -> Self::Output {
+            let mut res = self;
+            res -= rhs.value();
+            res
+        }
+    }
+
+    impl<M> Sub<ModInt<M>> for Num
+    where
+        M: ModuloPrimitive
+    {
+        type Output = ModInt<M>;
+        fn sub(self, rhs: ModInt<M>) -> Self::Output {
+            let mut res = ModInt::<M>::new(self);
+            res -= rhs.value();
             res
         }
     }
@@ -190,6 +242,15 @@ pub mod ntt {
         }
     }
 
+    impl<M> MulAssign for ModInt<M>
+    where
+        M: ModuloPrimitive
+    {
+        fn mul_assign(&mut self, rhs: ModInt<M>) {
+            *self *= rhs.value();
+        }
+    }
+
     impl<T, M> Mul<T> for ModInt<M>
     where
         Num: From<T>,
@@ -199,6 +260,30 @@ pub mod ntt {
         fn mul(self, rhs: T) -> Self::Output {
             let mut res = self;
             res *= rhs;
+            res
+        }
+    }
+
+    impl<M> Mul for ModInt<M>
+    where
+        M: ModuloPrimitive
+    {
+        type Output = ModInt<M>;
+        fn mul(self, rhs: ModInt<M>) -> Self::Output {
+            let mut res = self;
+            res *= rhs.value();
+            res
+        }
+    }
+
+    impl<M> Mul<ModInt<M>> for Num
+    where
+        M: ModuloPrimitive
+    {
+        type Output = ModInt<M>;
+        fn mul(self, rhs: ModInt<M>) -> Self::Output {
+            let mut res = ModInt::<M>::new(self);
+            res *= rhs.value();
             res
         }
     }
@@ -220,6 +305,15 @@ pub mod ntt {
         }
     }
 
+    impl<M> DivAssign for ModInt<M>
+    where
+        M: ModuloPrimitive
+    {
+        fn div_assign(&mut self, rhs: ModInt<M>) {
+            *self /= rhs.value();
+        }
+    }
+
     impl<T, M> Div<T> for ModInt<M>
     where
         Num: From<T>,
@@ -233,13 +327,37 @@ pub mod ntt {
         }
     }
 
+    impl<M> Div for ModInt<M>
+    where
+        M: ModuloPrimitive
+    {
+        type Output = ModInt<M>;
+        fn div(self, rhs: ModInt<M>) -> Self::Output {
+            let mut res = self;
+            res /= rhs.value();
+            res
+        }
+    }
+
+    impl<M> Div<ModInt<M>> for Num
+    where
+        M: ModuloPrimitive
+    {
+        type Output = ModInt<M>;
+        fn div(self, rhs: ModInt<M>) -> Self::Output {
+            let mut res = ModInt::<M>::new(self);
+            res /= rhs.value();
+            res
+        }
+    }
+
     pub struct NumberTheoreticTransform<M>(PhantomData<M>);
 
     impl<M> NumberTheoreticTransform<M>
     where
         M: ModuloPrimitive
     {
-        fn bit_reverse(f: &mut Vec<Num>) {
+        fn bit_reverse(f: &mut Vec<ModInt<M>>) {
             let mut i = 0;
             for j in 1..f.len()-1 {
                 let mut k = f.len() >> 1;
@@ -248,41 +366,42 @@ pub mod ntt {
             }
         }
 
-        fn dft(f: &mut Vec<Num>, inverse: bool) {
+        fn dft(f: &mut Vec<ModInt<M>>, inverse: bool) {
             let n = f.len();
             NumberTheoreticTransform::<M>::bit_reverse(f);
+            let p = ModInt::<M>::new(M::primitive_root());
             for i in (0..).map(|i| 1 << i).take_while(|&i| i < n) {
-                let mut w = M::pow(M::primitive_root(), (M::modulo() - 1) / (2 * i as i64));
-                if inverse { w = M::inv(w); }
+                let mut w = p.pow((M::modulo() - 1) / (2 * i as Num));
+                if inverse { w = 1 / w; }
                 for k in 0..i {
-                    let wn = M::pow(w, k as i64);
+                    let wn = w.pow(k as Num);
                     for j in (0..).map(|j| 2 * i * j).take_while(|&j| j < n) {
                         let s = f[j + k];
-                        let t = M::mul(f[j + k + i], wn);
-                        f[j + k] = M::add(s, t);
-                        f[j + k + i] = M::add(s, M::modulo() - t);
+                        let t = f[j + k + i] * wn;
+                        f[j + k] = s + t;
+                        f[j + k + i] = s - t;
                     }
                 }
             }
             if inverse {
-                let ninv = M::inv(n as Num);
-                for i in 0..n { f[i] = M::mul(f[i], ninv) }
+                for i in 0..n { f[i] = f[i] / ModInt::<M>::new(n as Num) }
             }
         }
 
         pub fn multiply(f: Vec<Num>, g: Vec<Num>) -> Vec<Num> {
-            let m = f.len() + g.len() + 1;
+            let m = f.len() + g.len() - 1;
             let n = m.next_power_of_two();
-            let mut ff = vec![0; n];
-            let mut gg = vec![0; n];
-            for i in 0..f.len() { ff[i] += f[i]; }
-            for i in 0..g.len() { gg[i] += g[i]; }
+            let zero = ModInt::<M>::new(0);
+            let mut ff = vec![zero; n];
+            let mut gg = vec![zero; n];
+            for i in 0..f.len() { ff[i] += ModInt::<M>::new(f[i]); }
+            for i in 0..g.len() { gg[i] += ModInt::<M>::new(g[i]); }
             NumberTheoreticTransform::<M>::dft(&mut ff, false);
             NumberTheoreticTransform::<M>::dft(&mut gg, false);
-            for i in 0..n { ff[i] = M::mul(ff[i], gg[i]); }
+            for i in 0..n { ff[i] *= gg[i]; }
             NumberTheoreticTransform::<M>::dft(&mut ff, true);
-            ff.resize(m, 0);
-            ff
+            ff.resize(m, zero);
+            ff.iter().map(|&v| v.value()).collect()
         }
     }
 }
@@ -298,6 +417,6 @@ mod tests {
         let f = vec![0, 1, 2, 3, 4];
         let g = vec![0, 1, 2, 4, 8];
         let x = NTT::multiply(f, g);
-        assert_eq!(x, vec![0, 0, 1, 4, 11, 26, 36, 40, 32, 0, 0]);
+        assert_eq!(x, vec![0, 0, 1, 4, 11, 26, 36, 40, 32]);
     }
 }
