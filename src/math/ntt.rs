@@ -1,4 +1,6 @@
 //! Verified [AtCoder Typical Contest 001 C - 高速フーリエ変換](https://atcoder.jp/contests/atc001/submissions/19095995)
+//! Verified [Library Checker](https://judge.yosupo.jp/submission/34580)
+//! TODO 定数倍がけっこう重いから軽量化しないとね
 
 pub mod ntt {
     use std::marker::PhantomData;
@@ -388,7 +390,7 @@ pub mod ntt {
             }
         }
 
-        pub fn multiply(f: Vec<Num>, g: Vec<Num>) -> Vec<Num> {
+        pub fn multiply(f: &Vec<Num>, g: &Vec<Num>) -> Vec<Num> {
             let m = f.len() + g.len() - 1;
             let n = m.next_power_of_two();
             let zero = ModInt::<M>::new(0);
@@ -404,6 +406,43 @@ pub mod ntt {
             ff.iter().map(|&v| v.value()).collect()
         }
     }
+
+    pub fn multiply_for_any_mod(f: &mut Vec<Num>, g: &mut Vec<Num>, modulo: Num) -> Vec<Num> {
+        f.iter_mut().for_each(|v| *v %= modulo);
+        g.iter_mut().for_each(|v| *v %= modulo);
+        let f = f.to_vec();
+        let g = g.to_vec();
+        type M2 = ModInt<Mod469762049>;
+        type M3 = ModInt<Mod1224736769>;
+        type NTT1 = NumberTheoreticTransform::<Mod167772161>;
+        type NTT2 = NumberTheoreticTransform::<Mod469762049>;
+        type NTT3 = NumberTheoreticTransform::<Mod1224736769>;
+        let x = NTT1::multiply(&f, &g);
+        let y = NTT2::multiply(&f, &g);
+        let z = NTT3::multiply(&f, &g);
+        let (m1, m2) = (Mod167772161::modulo(), Mod469762049::modulo());
+        let m1_inv_m2 = 1 / M2::new(m1);
+        let m12_inv_m3 = 1 / (M3::new(m1) * M3::new(m2));
+        let mut ret = vec![0; x.len()];
+        for i in 0..x.len() {
+            let v1 = ((M2::new(y[i]) - M2::new(x[i])) * m1_inv_m2).value();
+            let v2 = ((M3::new(z[i]) - (M3::new(x[i]) + M3::new(m1) * M3::new(v1))) * m12_inv_m3).value();
+            ret[i] = add(x[i], add(mul(m1, v1, modulo), mul(mul(m1, m2, modulo), v2, modulo), modulo), modulo);
+        }
+        ret
+    }
+
+    fn add(mut x: Num, y: Num, modulo: Num) -> Num {
+        x += y;
+        if x >= modulo {
+            x -= modulo;
+        }
+        x
+    }
+
+    fn mul(x: Num, y: Num, modulo: Num) -> Num {
+        x * y % modulo
+    }
 }
 
 #[cfg(test)]
@@ -416,7 +455,33 @@ mod tests {
     fn test_atc001c() {
         let f = vec![0, 1, 2, 3, 4];
         let g = vec![0, 1, 2, 4, 8];
-        let x = NTT::multiply(f, g);
+        let x = NTT::multiply(&f, &g);
         assert_eq!(x, vec![0, 0, 1, 4, 11, 26, 36, 40, 32]);
+    }
+
+    #[test]
+    fn test_yosupo() {
+        let f = vec![1, 2, 3, 4];
+        let g = vec![5, 6, 7, 8, 9];
+        let x = NTT::multiply(&f, &g);
+        assert_eq!(x, vec![5, 16, 34, 60, 70, 70, 59, 36]);
+
+        let f = vec![10000000];
+        let g = vec![10000000];
+        let x = NTT::multiply(&f, &g);
+        assert_eq!(x, vec![871938225]);
+    }
+
+    #[test]
+    fn test_yosupo_mod1e9p7() {
+        let mut f = vec![1, 2, 3, 4];
+        let mut g = vec![5, 6, 7, 8, 9];
+        let x = multiply_for_any_mod(&mut f, &mut g, 1_000_000_007);
+        assert_eq!(x, vec![5, 16, 34, 60, 70, 70, 59, 36]);
+
+        let mut f = vec![10000000];
+        let mut g = vec![10000000];
+        let x = multiply_for_any_mod(&mut f, &mut g, 1_000_000_007);
+        assert_eq!(x, vec![999300007]);
     }
 }
