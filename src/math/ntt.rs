@@ -8,14 +8,14 @@ pub mod ntt {
 
     type Num = i64;
 
-    pub trait ModuloPrimitive {
+    pub trait ModuloPrimitive: Clone + Copy {
         fn modulo() -> Num;
         fn primitive_root() -> Num;
     }
 
     macro_rules! define_modulo_primitive {
         ($name:ident, $mod:expr, $proot:expr) => {
-            #[derive(Debug)]
+            #[derive(Debug, Clone, Copy)]
             pub struct $name;
             impl ModuloPrimitive for $name {
                 fn modulo() -> i64 { $mod }
@@ -95,6 +95,16 @@ pub mod ntt {
                 std::mem::swap(&mut u, &mut v);
             }
             ModInt::new::<Num>(u)
+        }
+    }
+
+    impl<M> Neg for ModInt<M>
+    where
+        M: ModuloPrimitive
+    {
+        type Output = Self;
+        fn neg(self) -> Self::Output {
+            Self::new(M::modulo() - self.0)
         }
     }
 
@@ -352,6 +362,15 @@ pub mod ntt {
             res
         }
     }
+    
+    impl<M> PartialEq for ModInt<M>
+    where
+        M: ModuloPrimitive
+    {
+        fn eq(&self, rhs: &Self) -> bool {
+            self.value() == rhs.value()
+        }
+    }
 
     pub struct NumberTheoreticTransform<M>(PhantomData<M>);
 
@@ -404,6 +423,22 @@ pub mod ntt {
             NumberTheoreticTransform::<M>::dft(&mut ff, true);
             ff.resize(m, zero);
             ff.iter().map(|&v| v.value()).collect()
+        }
+
+        pub fn multiply_modint(f: &Vec<ModInt<M>>, g: &Vec<ModInt<M>>) -> Vec<ModInt<M>> {
+            let m = f.len() + g.len();
+            let n = m.next_power_of_two();
+            let zero = ModInt::<M>::new(0);
+            let mut ff = vec![zero; n];
+            let mut gg = vec![zero; n];
+            for i in 0..f.len() { ff[i] += f[i]; }
+            for i in 0..g.len() { gg[i] += g[i]; }
+            NumberTheoreticTransform::<M>::dft(&mut ff, false);
+            NumberTheoreticTransform::<M>::dft(&mut gg, false);
+            for i in 0..n { ff[i] *= gg[i]; }
+            NumberTheoreticTransform::<M>::dft(&mut ff, true);
+            ff.resize(m-1, zero);
+            ff
         }
     }
 
