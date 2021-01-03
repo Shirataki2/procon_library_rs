@@ -47,6 +47,8 @@
         - 素因数分解
     - FFT
         - 高速フーリエ変換
+    - FPS
+        - 形式的冪級数
     - NTT
         - 数論変換
     - GCD
@@ -65,5 +67,9 @@
         - 接尾辞配列(SA-IS)
 
 - Utils
+    - Itertools
+        - 累積和と組み合わせ(iter拡張)
     - IO
         - 高速な入出力
+    - Permutations
+        - next_permutation
