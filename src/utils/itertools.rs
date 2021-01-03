@@ -119,7 +119,6 @@ where
     fn next(&mut self) -> Option<Self::Item> {
         let n = self.vec.len();
         let r = self.r;
-        if n < r { return None }
         if self.first {
             self.first = false;
         } else {
