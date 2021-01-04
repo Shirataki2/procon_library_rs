@@ -7,10 +7,14 @@
 - Data Structure
     - Segment Tree
         - いたって普通のセグ木
+    - Lazy Segment Tree
+        - 遅延セグメント木
     - Skew Heap
         - 結合できる優先度付きキュー
     - Sparse Table
         - 静的な配列なら定数倍高速なやつ
+    - Trie
+        - トライ木
     - Union Find
         - 素集合データ構造
     - Weighted Union Find

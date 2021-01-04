@@ -2,7 +2,7 @@ pub mod lazy_segtree {
     /// ## Cheetsheet
     /// 
     /// ### Range Minimum Query + Range Add Query
-    /// ```ignore
+    /// ```no_test
     /// v: [0; n]
     /// f(a, b) = min(a, b)
     /// g(a, b) = a + b
@@ -11,7 +11,7 @@ pub mod lazy_segtree {
     /// ```
     /// 
     /// ### Range Sum Query + Range Add Query
-    /// ```ignore
+    /// ```no_test
     /// v: [(0, 1); n]
     /// f(a, b) = (a.0 + b.0, a.1 + b.1)
     /// g(a, b) = (a.0 + b * a.1, a.1)
