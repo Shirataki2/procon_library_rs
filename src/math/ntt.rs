@@ -88,10 +88,10 @@ pub mod ntt {
         {
             let (mut a, mut b, mut u, mut v) = (self.0, M::modulo(), 1, 0);
             while b > 0 {
-                let t = a / b;
-                a -= t * b;
+                let tmp = a / b;
+                a -= tmp * b;
                 std::mem::swap(&mut a, &mut b);
-                u -= t * v;
+                u -= tmp * v;
                 std::mem::swap(&mut u, &mut v);
             }
             ModInt::new::<Num>(u)
@@ -390,26 +390,26 @@ pub mod ntt {
         fn dft(f: &mut Vec<ModInt<M>>, inverse: bool) {
             let n = f.len();
             NumberTheoreticTransform::<M>::bit_reverse(f);
-            let p = ModInt::<M>::new(M::primitive_root());
+            let proot = ModInt::<M>::new(M::primitive_root());
             for i in (0..).map(|i| 1 << i).take_while(|&i| i < n) {
-                let mut w = p.pow((M::modulo() - 1) / (2 * i as Num));
+                let mut w = proot.pow((M::modulo() - 1) / (2 * i as Num));
                 if inverse { w = 1 / w; }
                 for k in 0..i {
                     let wn = w.pow(k as Num);
                     for j in (0..).map(|j| 2 * i * j).take_while(|&j| j < n) {
-                        let s = f[j + k];
-                        let t = f[j + k + i] * wn;
-                        f[j + k] = s + t;
-                        f[j + k + i] = s - t;
+                        let left = f[j + k];
+                        let right = f[j + k + i] * wn;
+                        f[j + k] = left + right;
+                        f[j + k + i] = left - right;
                     }
                 }
             }
             if inverse {
-                for i in 0..n { f[i] = f[i] / ModInt::<M>::new(n as Num) }
+                f.iter_mut().for_each(|fi| { *fi /= ModInt::<M>::new(n as Num); })
             }
         }
 
-        pub fn multiply(f: &Vec<Num>, g: &Vec<Num>) -> Vec<Num> {
+        pub fn multiply(f: &[Num], g: &[Num]) -> Vec<Num> {
             let m = f.len() + g.len() - 1;
             let n = m.next_power_of_two();
             let zero = ModInt::<M>::new(0);
@@ -425,7 +425,7 @@ pub mod ntt {
             ff.iter().map(|&v| v.value()).collect()
         }
 
-        pub fn multiply_modint(f: &Vec<ModInt<M>>, g: &Vec<ModInt<M>>) -> Vec<ModInt<M>> {
+        pub fn multiply_modint(f: &[ModInt<M>], g: &[ModInt<M>]) -> Vec<ModInt<M>> {
             let m = f.len() + g.len();
             let n = m.next_power_of_two();
             let zero = ModInt::<M>::new(0);
@@ -452,17 +452,17 @@ pub mod ntt {
         type NTT1 = NumberTheoreticTransform::<Mod167772161>;
         type NTT2 = NumberTheoreticTransform::<Mod469762049>;
         type NTT3 = NumberTheoreticTransform::<Mod1224736769>;
-        let x = NTT1::multiply(&f, &g);
-        let y = NTT2::multiply(&f, &g);
-        let z = NTT3::multiply(&f, &g);
+        let ntt1 = NTT1::multiply(&f, &g);
+        let ntt2 = NTT2::multiply(&f, &g);
+        let ntt3 = NTT3::multiply(&f, &g);
         let (m1, m2) = (Mod167772161::modulo(), Mod469762049::modulo());
         let m1_inv_m2 = 1 / M2::new(m1);
         let m12_inv_m3 = 1 / (M3::new(m1) * M3::new(m2));
-        let mut ret = vec![0; x.len()];
-        for i in 0..x.len() {
-            let v1 = ((M2::new(y[i]) - M2::new(x[i])) * m1_inv_m2).value();
-            let v2 = ((M3::new(z[i]) - (M3::new(x[i]) + M3::new(m1) * M3::new(v1))) * m12_inv_m3).value();
-            ret[i] = add(x[i], add(mul(m1, v1, modulo), mul(mul(m1, m2, modulo), v2, modulo), modulo), modulo);
+        let mut ret = vec![0; ntt1.len()];
+        for i in 0..ntt1.len() {
+            let v1 = ((M2::new(ntt2[i]) - M2::new(ntt1[i])) * m1_inv_m2).value();
+            let v2 = ((M3::new(ntt3[i]) - (M3::new(ntt1[i]) + M3::new(m1) * M3::new(v1))) * m12_inv_m3).value();
+            ret[i] = add(ntt1[i], add(mul(m1, v1, modulo), mul(mul(m1, m2, modulo), v2, modulo), modulo), modulo);
         }
         ret
     }

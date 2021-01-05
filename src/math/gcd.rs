@@ -11,9 +11,9 @@ pub fn lcm(a: u64, b: u64) -> u64 {
 
 pub fn extgcd(a: i64, b: i64) -> (i64, i64, i64) {
     if b > 0 {
-        let (d, mut y, x) = extgcd(b, a % b);
+        let (gcd, mut y, x) = extgcd(b, a % b);
         y -= (a / b) * x;
-        (d, x, y)
+        (gcd, x, y)
     } else {
         (a, 1, 0)
     }

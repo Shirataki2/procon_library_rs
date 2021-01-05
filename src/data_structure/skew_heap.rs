@@ -41,6 +41,12 @@ pub mod skew_heap {
         }
     }
 
+    impl<T: Ord> Default for SkewHeap<T> {
+        fn default() -> Self {
+            Self::new()
+        }
+    }
+
     impl<T: Ord> Add for SkewHeap<T> {
         type Output = Self;
         fn add(self, rhs: Self) -> Self {

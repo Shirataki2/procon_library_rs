@@ -42,12 +42,10 @@ pub mod lazy_segtree {
             // height = log_2 size
             let height = (!size).trailing_ones() as usize;
             let mut data = vec![t0; 2 * size];
-            for i in 0..v.len() {
-                data[size + i] = v[i];
-            }
+            data[size..(v.len() + size)].clone_from_slice(&v[..]);
             let lazy = vec![u0; 2 * size];
             for k in (1..size).rev() {
-                data[k] = (f)(&data[2 * k + 0], &data[2 * k + 1]);
+                data[k] = (f)(&data[2 * k], &data[2 * k + 1]);
             }
             Self { size, height, data, lazy, f, g, h, t0, u0 }
         }
@@ -58,14 +56,14 @@ pub mod lazy_segtree {
 
         pub fn build(&mut self) {
             for k in (1..self.size).rev() {
-                self.data[k] = (self.f)(&self.data[2 * k + 0], &self.data[2 * k + 1]);
+                self.data[k] = (self.f)(&self.data[2 * k], &self.data[2 * k + 1]);
             }
         }
 
         #[inline]
         fn propagate(&mut self, k: usize) {
             if self.lazy[k] != self.u0 {
-                self.lazy[2 * k + 0] = (self.h)(&self.lazy[2 * k + 0], &self.lazy[k]);
+                self.lazy[2 * k] = (self.h)(&self.lazy[2 * k], &self.lazy[k]);
                 self.lazy[2 * k + 1] = (self.h)(&self.lazy[2 * k + 1], &self.lazy[k]);
                 self.data[k] = self.reflect(k);
                 self.lazy[k] = self.u0;
@@ -83,8 +81,10 @@ pub mod lazy_segtree {
 
         #[inline]
         fn recalc(&mut self, mut k: usize) {
-            while { k >>= 1; k > 0 } {
-                self.data[k] = (self.f)(&self.reflect(2 * k + 0), &self.reflect(2 * k + 1));
+            k >>= 1;
+            while k > 0 {
+                self.data[k] = (self.f)(&self.reflect(2 * k), &self.reflect(2 * k + 1));
+                k >>= 1;
             }
         }
 
@@ -95,25 +95,25 @@ pub mod lazy_segtree {
             }
         }
 
-        pub fn update(&mut self, mut a: usize, mut b: usize, v: U) {
-            a += self.size;
-            b += self.size - 1;
-            self.thrust(a);
-            self.thrust(b);
-            let mut l = a; let mut r = b + 1;
+        pub fn update(&mut self, mut left: usize, mut right: usize, value: U) {
+            left += self.size;
+            right += self.size - 1;
+            self.thrust(left);
+            self.thrust(right);
+            let mut l = left; let mut r = right + 1;
             while l < r {
                 if l & 1 > 0 {
-                    self.lazy[l] = (self.h)(&self.lazy[l], &v);
+                    self.lazy[l] = (self.h)(&self.lazy[l], &value);
                     l += 1;
                 }
                 if r & 1 > 0 {
                     r -= 1;
-                    self.lazy[r] = (self.h)(&self.lazy[r], &v);
+                    self.lazy[r] = (self.h)(&self.lazy[r], &value);
                 }
                 l >>= 1; r >>= 1;
             }
-            self.recalc(a);
-            self.recalc(b);
+            self.recalc(left);
+            self.recalc(right);
         }
 
         pub fn query(&mut self, mut a: usize, mut b: usize) -> T {

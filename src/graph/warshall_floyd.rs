@@ -11,6 +11,7 @@ pub mod warshall_floyd {
     pub struct WarshallFloyd<T>(Vec<Vec<T>>);
 
     impl<T: AbelGroup + Bounded + Signed> WarshallFloyd<T> {
+        #[allow(clippy::needless_range_loop)]
         pub fn new(n: usize) -> Self {
             let mut d = vec![vec![T::max_value(); n]; n];
             for i in 0..n {
@@ -43,7 +44,7 @@ pub mod warshall_floyd {
 
         pub fn has_negative_cycle(&self) -> bool {
             let n = self.0.len();
-            (0..n).fold(false, |x, i| x || self[i][i] < T::zero())
+            (0..n).any(|i| self[i][i] < T::zero())
         }
     }
 

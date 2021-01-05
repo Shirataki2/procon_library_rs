@@ -40,6 +40,12 @@ pub mod trie {
         }
     }
 
+    impl<C: CharSet> Default for TrieNode<C> {
+        fn default() -> Self {
+            Self::new()
+        }
+    }
+
     pub struct TrieTree<C> {
         nodes: Vec<TrieNode<C>>,
         pub root: usize,
@@ -83,9 +89,7 @@ pub mod trie {
 
         pub fn query_at(&mut self, s: &[char], mut f: impl FnMut(&usize), str_idx: usize, node_idx: usize) {
             self.nodes[node_idx].accept.iter().for_each(|&idx| (f)(&idx));
-            if str_idx == s.len() {
-                return
-            } else {
+            if str_idx != s.len() {
                 let c = C::to_int(s[str_idx]);
                 if self.nodes[node_idx].next[c] == -1 { return }
                 self.query_at(s, f, str_idx + 1, self.nodes[node_idx].next[c] as usize)
@@ -102,6 +106,12 @@ pub mod trie {
 
         pub fn size(&self) -> usize {
             self.nodes.len()
+        }
+    }
+
+    impl<C: CharSet> Default for TrieTree<C> {
+        fn default() -> Self {
+            Self::new()
         }
     }
 }

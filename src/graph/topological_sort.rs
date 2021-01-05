@@ -40,8 +40,8 @@ pub mod topological_sort {
                     }
                 }
             }
-            match self.degree.iter().max().unwrap() {
-                &0 => Some(ret),
+            match *self.degree.iter().max().unwrap() {
+                0 => Some(ret),
                 _  => None
             }
         }

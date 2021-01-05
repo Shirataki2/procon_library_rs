@@ -75,10 +75,10 @@ pub mod modint {
         {
             let (mut a, mut b, mut u, mut v) = (self.0, modulo(), 1, 0);
             while b > 0 {
-                let t = a / b;
-                a -= t * b;
+                let tmp = a / b;
+                a -= tmp * b;
                 swap(&mut a, &mut b);
-                u -= t * v;
+                u -= tmp * v;
                 swap(&mut u, &mut v);
             }
             ModInt::new::<i64>(u)

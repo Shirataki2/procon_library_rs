@@ -32,7 +32,7 @@ pub mod segtree {
 
         pub fn build(&mut self) {
             for k in (1..self.size).rev() {
-                self.data[k] = (self.f)(&self.data[2 * k + 0], &self.data[2 * k + 1]);
+                self.data[k] = (self.f)(&self.data[2 * k], &self.data[2 * k + 1]);
             }
         }
 
@@ -45,10 +45,10 @@ pub mod segtree {
             }
         }
 
-        pub fn query(&self, i: usize, j: usize) -> T {
+        pub fn query(&self, left: usize, right: usize) -> T {
             let mut s = self.id;
-            let mut l = i + self.size;
-            let mut r = j + self.size;
+            let mut l = left + self.size;
+            let mut r = right + self.size;
             while l < r {
                 if (l & 1) > 0 {
                     s = (self.f)(&s, &self.data[l]);

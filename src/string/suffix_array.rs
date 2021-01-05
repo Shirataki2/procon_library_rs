@@ -10,7 +10,7 @@ pub mod suffix_array {
     enum CharType{ L, S }
 
     impl SuffixArray {
-        pub fn new(s: &String) -> Self {
+        pub fn new(s: &str) -> Self {
             let mut max_si = 0;
             let si = s.chars().map(|c| {
                 let i = c as usize;
@@ -20,6 +20,7 @@ pub mod suffix_array {
             Self(SuffixArray::sa_is(&si, max_si))
         }
 
+        #[allow(clippy::needless_range_loop)]
         fn sa_is(si: &[usize], max_si: usize) -> Vec<usize> {
             let n = si.len();
             if n <= 2 {
@@ -114,8 +115,7 @@ pub mod suffix_array {
             let mut initials = vec![0; n];
             let mut ct = vec![CharType::L; n];
             let mut checked = vec![false; l_ctr.len()];
-            for i in 0..n {
-                let c = si[i];
+            si.iter().for_each(|&c| {
                 let (rs, re) = chr_ranges[c];
                 let mut l_count = l_ctr[c];
                 if !checked[c] {
@@ -126,7 +126,7 @@ pub mod suffix_array {
                     }
                     checked[c] = true;
                 }
-            }
+            });
 
             let mut chr_index = vec![std::usize::MAX; l_ctr.len()];
             for &i in lms.iter().rev() {

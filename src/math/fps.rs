@@ -13,16 +13,16 @@ pub mod fps {
     }
 
     #[derive(Debug, Clone)]
-    pub struct FPS<M: ModuloPrimitive>(Box<Vec<ModInt<M>>>);
+    pub struct FPS<M: ModuloPrimitive>(Vec<ModInt<M>>);
 
     impl <M: ModuloPrimitive> FPS<M> {
         pub fn new(v: Vec<ModInt<M>>) -> Self {
-            Self(Box::new(v))
+            Self(v)
         }
 
         pub fn with_size(size: usize) -> Self {
             let v = vec![ModInt::zero(); size];
-            Self(Box::new(v))
+            Self(v)
         }
 
         pub fn values(&self) -> Vec<i64> {
@@ -52,7 +52,7 @@ pub mod fps {
             let (x, y) = (x.clone(), y.clone());
             if y.0.is_empty() { return x }
             let r = x % y.clone();
-            return Self::inner_gcd(&y, &r)
+            Self::inner_gcd(&y, &r)
         }
 
         pub fn gcd(&self, r: &Self) -> Self {
@@ -128,7 +128,7 @@ pub mod fps {
             if i * n >= deg as usize { return Self::with_size(deg as usize); }
             let k = self[i];
             let nm = ModInt::<M>::new(n as i64);
-            let mut v = (((self.clone() >> i) / k).log_degree(deg) * nm).exp_degree(deg) * k.pow(n as i64) << (n * i);
+            let mut v = ((((self.clone() >> i) / k).log_degree(deg) * nm).exp_degree(deg) * k.pow(n as i64)) << (n * i);
             v.0.resize(deg as usize, ModInt::zero());
             v
         }
@@ -176,10 +176,8 @@ pub mod fps {
         type Output = Self;
         #[inline]
         fn neg(self) -> Self::Output {
-            let mut v = *self.0;
-            for i in 0..v.len() {
-                v[i] = -v[i];
-            }
+            let mut v = self.0;
+            v.iter_mut().for_each(|vi| *vi = -*vi);
             Self::new(v)
         }
     }
@@ -279,7 +277,7 @@ pub mod fps {
         #[inline]
         fn mul_assign(&mut self, rhs: FPS<M>) {
             let v = NumberTheoreticTransform::<M>::multiply_modint(&self.0, &rhs.0);
-            self.0 = Box::new(v);
+            self.0 = v;
         }
     }
 
@@ -374,7 +372,7 @@ pub mod fps {
         fn shl_assign(&mut self, x: usize) {
             let mut v = vec![ModInt::<M>::zero(); x];
             v.append(&mut self.0);
-            self.0 = Box::new(v);
+            self.0 = v;
         }
     }
 
@@ -392,7 +390,7 @@ pub mod fps {
     impl<M: ModuloPrimitive> ShrAssign<usize> for FPS<M> {
         #[inline]
         fn shr_assign(&mut self, x: usize) {
-            self.0 = Box::new(self.0.drain(x..).collect());
+            self.0 = self.0.drain(x..).collect();
         }
     }
 

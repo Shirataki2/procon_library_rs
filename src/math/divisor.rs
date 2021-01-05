@@ -7,7 +7,7 @@ pub fn divisor(n: u64) -> Vec<u64> {
             if i * i != n { ret.push(n / i); }
         }
     }
-    ret.sort();
+    ret.sort_unstable();
     ret
 }
 

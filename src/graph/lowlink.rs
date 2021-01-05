@@ -60,8 +60,8 @@ pub mod lowlink {
                     k = self.dfs(i, k, -1);
                 }
             }
-            self.articulations.sort();
-            self.bridges.sort();
+            self.articulations.sort_unstable();
+            self.bridges.sort_unstable();
         }
     }
 }

@@ -54,7 +54,7 @@ mod tests {
         10 20 15    30 5
         something  
 
-        3.14   -10.7
+        3.55   -10.7
         hoge";
         let mut sc = IO::new(&input[..], Vec::new());
 
@@ -68,7 +68,7 @@ mod tests {
         assert_eq!(s, vec!['s', 'o', 'm', 'e', 't', 'h', 'i', 'n', 'g']);
     
         let f: f64 = sc.read();
-        assert_eq!(f, 3.14);
+        assert_eq!(f, 3.55);
 
         let neg: f64 = sc.read();
         assert_eq!(neg, -10.7);
@@ -80,7 +80,7 @@ mod tests {
         10 20 15    30 5
         something  
 
-        3.14   -10.7
+        3.55   -10.7
         hoge";
         let mut io = IO::new(&input[..], Vec::new());
 
@@ -94,7 +94,7 @@ mod tests {
         assert_eq!(s, vec!['s', 'o', 'm', 'e', 't', 'h', 'i', 'n', 'g']);
     
         input!(io => f: f64, neg: f64);
-        assert_eq!(f, 3.14);
+        assert_eq!(f, 3.55);
         assert_eq!(neg, -10.7);
     }
 

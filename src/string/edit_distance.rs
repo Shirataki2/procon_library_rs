@@ -1,5 +1,6 @@
 use crate::*;
 
+#[allow(clippy::needless_range_loop)]
 pub fn edit_distance<T: Eq>(s: &[T], t: &[T]) -> usize {
     let (n, m) = (s.len(), t.len());
     let mut dp = vec![vec![n+m+1; m+1]; n+1];
@@ -9,8 +10,7 @@ pub fn edit_distance<T: Eq>(s: &[T], t: &[T]) -> usize {
             if i < n { chmin!(dp[i+1][j], dp[i][j] + 1); }
             if j < m { chmin!(dp[i][j+1], dp[i][j] + 1); }
             if i < n && j < m {
-                let c = if s[i] != t[j] { 1 } else { 0 };
-                chmin!(dp[i+1][j+1], dp[i][j] + c);
+                chmin!(dp[i+1][j+1], dp[i][j] + if s[i] != t[j] { 1 } else { 0 });
             }
         }
     }

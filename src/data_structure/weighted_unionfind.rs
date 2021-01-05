@@ -24,6 +24,7 @@ pub mod weighted_unionfind {
             Self { parent, rank, weights }
         }
 
+        #[allow(clippy::assign_op_pattern)]
         pub fn root(&mut self, x: usize) -> usize {
             if self.parent[x] == x {
                 x
@@ -44,6 +45,7 @@ pub mod weighted_unionfind {
             self.root(x) == self.root(y)
         }
 
+        #[allow(clippy::assign_op_pattern)]
         pub fn merge(&mut self, mut x: usize, mut y: usize, mut w: T) -> bool {
             w = w + self.weight(x);
             w = w + -self.weight(y);

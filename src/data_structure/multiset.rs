@@ -65,6 +65,12 @@ pub mod multiset {
         }
     }
 
+    impl<T: Ord> Default for BTreeMultiSet<T> {
+        fn default() -> BTreeMultiSet<T> {
+            Self::new()
+        }
+    }
+
     pub struct BTreeMultiSetIterator<'a, T> {
         range: Range<'a, T, usize>,
         item: Option<&'a T>,
@@ -117,21 +123,20 @@ pub mod multiset {
 #[cfg(test)]
 mod tests {
     use super::multiset::*;
-    use std::iter::FromIterator;
 
 
     #[test]
     fn test_from_vec() {
         let v = vec![0, 2, 1, 3, 1, 4, 2, 3, 4, 1];
         let u = vec![0, 1, 1, 1, 2, 2, 3, 3, 4, 4];
-        let set = BTreeMultiSet::from_iter(v.into_iter());
+        let set: BTreeMultiSet<i32> = v.into_iter().collect();
         assert_eq!(set.iter().copied().collect::<Vec<_>>(), u);
     }
 
     #[test]
     fn test_insert_and_range() {
         let v = vec![0, 2, 1, 3, 1, 4, 2, 3, 4, 1];
-        let mut set = BTreeMultiSet::from_iter(v.into_iter());
+        let mut set: BTreeMultiSet<i32> = v.into_iter().collect();
         set.insert(0);
         set.insert(4);
         assert_eq!(set.range(3..).copied().collect::<Vec<_>>(), vec![3, 3, 4, 4, 4]);
@@ -155,9 +160,9 @@ mod tests {
 
     #[test]
     fn test_set_ops() {
-        let s = BTreeMultiSet::<i32>::from_iter(vec![0, 2, 4, 6, 8].into_iter());
-        let t = BTreeMultiSet::<i32>::from_iter(vec![0, 6, 8].into_iter());
-        let u = BTreeMultiSet::<i32>::from_iter(vec![1, 3, 5, 7].into_iter());
+        let s: BTreeMultiSet<i32> = vec![0, 2, 4, 6, 8].into_iter().collect();
+        let t: BTreeMultiSet<i32> = vec![0, 6, 8].into_iter().collect();
+        let u: BTreeMultiSet<i32> = vec![1, 3, 5, 7].into_iter().collect();
         let v = BTreeMultiSet::<i32>::new();
         assert!(v.is_empty());
         assert!(!s.is_empty());

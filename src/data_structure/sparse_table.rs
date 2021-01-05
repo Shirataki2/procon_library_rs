@@ -14,6 +14,7 @@ pub mod sparse_table {
         Min, Max
     }
 
+    #[allow(clippy::needless_range_loop)]
     impl<T: Ord + Clone + Copy> SparseTable<T> {
         pub fn new(v: &[T], op: OperationType) -> Self {
             let n = v.len();
@@ -42,10 +43,10 @@ pub mod sparse_table {
 
         /// Returns the index of the maximum/minimum value of
         /// the array in the **closed interval** [s..t].
-        pub fn query(&self, s: usize, t: usize) -> usize {
-            let d = t - s + 1;
+        pub fn query(&self, left: usize, right: usize) -> usize {
+            let d = right - left + 1;
             let k = self.logs[d];
-            let (v1, v2) = (self.table[s][k], self.table[t + 1 - (1 << k)][k]);
+            let (v1, v2) = (self.table[left][k], self.table[right + 1 - (1 << k)][k]);
             let f = match self.op {
                 OperationType::Min => { self.data[v1] < self.data[v2] },
                 OperationType::Max => { self.data[v1] > self.data[v2] },

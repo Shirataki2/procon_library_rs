@@ -17,13 +17,13 @@ pub mod fft {
         }
 
         fn dft(f: &mut Vec<Complex>, inverse: bool) {
-            let n = f.len();
+            let size = f.len();
             let pi = std::f64::consts::PI * if inverse { -1.0 } else { 1.0 };
             FastFourierTransform::bit_reverse(f);
-            for i in (0..).map(|i| 1 << i).take_while(|&i| i < n) {
+            for i in (0..).map(|i| 1 << i).take_while(|&i| i < size) {
                 for k in 0..i {
                     let w = Complex::from_polar(1.0, k as f64 * pi / i as f64);
-                    for j in (0..).map(|j| 2 * i * j).take_while(|&j| j < n) {
+                    for j in (0..).map(|j| 2 * i * j).take_while(|&j| j < size) {
                         let s = f[j + k];
                         let t = f[j + k + i] * w;
                         f[j + k] = s + t;

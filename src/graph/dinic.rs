@@ -36,17 +36,17 @@ pub mod dinic {
         }
 
         fn bfs(&mut self, s: usize, t: usize) -> bool {
-            let n = self.graph.len();
-            self.min_cost = vec![T::max_value(); n];
-            let mut q = VecDeque::new();
+            let size = self.graph.len();
+            self.min_cost = vec![T::max_value(); size];
+            let mut queue = VecDeque::new();
             self.min_cost[s] = T::zero();
-            q.push_back(s);
-            while !q.is_empty() {
-                let p = q.pop_front().unwrap();
+            queue.push_back(s);
+            while !queue.is_empty() {
+                let p = queue.pop_front().unwrap();
                 for edge in self.graph[p].iter() {
                     if edge.cap > T::zero() && self.min_cost[edge.to] == T::max_value() {
                         self.min_cost[edge.to] = self.min_cost[p] + T::one();
-                        q.push_back(edge.to);
+                        queue.push_back(edge.to);
                     }
                 }
             }

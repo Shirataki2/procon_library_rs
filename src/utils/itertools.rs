@@ -163,7 +163,7 @@ mod tests {
         let a = 1105;
         let mut f = false;
         for comb in v.iter().bit_brute() {
-            let sum = comb.iter().fold(0, |acc, &x| acc + x);
+            let sum: u32 = comb.iter().copied().sum();
             if a == sum {
                 f = true;
                 assert_eq!(comb, vec![&1u32, &1099, &5]);
