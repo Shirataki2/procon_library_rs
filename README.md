@@ -5,6 +5,8 @@
 ## なかみ
 
 - Data Structure
+    - Fenwick Tree
+        - いわゆるBinary Index Tree
     - Segment Tree
         - いたって普通のセグ木
     - Lazy Segment Tree
