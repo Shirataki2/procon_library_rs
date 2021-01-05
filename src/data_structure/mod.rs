@@ -5,3 +5,4 @@ pub mod sparse_table;
 pub mod segtree;
 pub mod lazy_segtree;
 pub mod trie;
+pub mod fenwick_tree;
