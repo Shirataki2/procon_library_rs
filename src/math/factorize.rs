@@ -39,6 +39,7 @@ pub fn factorize_pair(n: u64) -> std::collections::HashMap<u64, u64> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::collections::HashMap;
 
     #[test]
     fn test_factorize() {
@@ -49,5 +50,15 @@ mod tests {
     #[test]
     fn test_factorize_large_prime() {
         assert_eq!(factorize(1_000_000_000_039), vec![1_000_000_000_039]);
+    }
+
+    #[test]
+    fn test_factorize_pair() {
+        let mut map = HashMap::new();
+        map.insert(2, 4);
+        map.insert(5, 1);
+        map.insert(23, 1);
+        map.insert(271, 1);
+        assert_eq!(factorize_pair(498640), map);
     }
 }

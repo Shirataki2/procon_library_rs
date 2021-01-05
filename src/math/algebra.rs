@@ -15,7 +15,6 @@ pub mod num_trait {
 
     pub trait Signed: Sized {
         fn abs(&self) -> Self;
-        fn abs_sub(&self, other: &Self) -> Self;
         fn is_positive(&self) -> bool;
         fn is_negative(&self) -> bool;
     }
@@ -83,7 +82,6 @@ pub mod num_trait {
         ($($name: tt)*) => {$(
             impl Signed for $name {
                 fn abs(&self) -> Self { if self >= &0 { *self } else { -self } }
-                fn abs_sub(&self, other: &Self) -> Self { if self >= other { self - other } else { other - self } }
                 fn is_positive(&self) -> bool { self > &0 }
                 fn is_negative(&self) -> bool { self < &0 }
             }
@@ -106,7 +104,6 @@ pub mod num_trait {
             }
             impl Signed for $name {
                 fn abs(&self) -> Self { if self >= &0.0 { *self } else { -self } }
-                fn abs_sub(&self, other: &Self) -> Self { (self - other).abs() }
                 fn is_positive(&self) -> bool { self > &0.0 }
                 fn is_negative(&self) -> bool { self < &0.0 }
             }
@@ -122,4 +119,57 @@ pub mod num_trait {
     signed_int_primitives!(i128 i64 i32 i16 i8 isize);
     unsigned_int_primitives!(u128 u64 u32 u16 u8 usize);
     floating_primitives!(f32 f64);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::num_trait::*;
+
+    #[test]
+    fn test_traits_unsigned() {
+        assert_eq!(u128::zero(), 0u128);
+        assert!(0u128.is_zero());
+        assert!(!1u128.is_zero());
+        assert_eq!(u128::one(), 1u128);
+        assert!(1u128.is_one());
+        assert!(!0u128.is_one());
+        assert_eq!(u128::max_value(), std::u128::MAX);
+        assert_eq!(u128::min_value(), std::u128::MIN);
+    }
+
+    #[test]
+    fn test_traits_signed() {
+        assert_eq!(i128::zero(), 0i128);
+        assert!(0i128.is_zero());
+        assert!(!1i128.is_zero());
+        assert_eq!(i128::one(), 1i128);
+        assert!(1i128.is_one());
+        assert!(!0i128.is_one());
+        assert_eq!(i128::max_value(), std::i128::MAX);
+        assert_eq!(i128::min_value(), std::i128::MIN);
+        assert!((-5i128).is_negative());
+        assert!(!(-5i128).is_positive());
+        assert!(!5i128.is_negative());
+        assert!(5i128.is_positive());
+        assert_eq!((-3i128).abs(), 3i128);
+        assert_eq!(3i128.abs(), 3i128);
+    }
+
+    #[test]
+    fn test_traits_floating() {
+        assert_eq!(f32::zero(), 0f32);
+        assert!(0f32.is_zero());
+        assert!(!1f32.is_zero());
+        assert_eq!(f32::one(), 1f32);
+        assert!(1f32.is_one());
+        assert!(!0f32.is_one());
+        assert_eq!(f32::max_value(), std::f32::MAX);
+        assert_eq!(f32::min_value(), std::f32::MIN);
+        assert!((-5f32).is_negative());
+        assert!(!(-5f32).is_positive());
+        assert!(!5f32.is_negative());
+        assert!(5f32.is_positive());
+        assert_eq!((-3f32).abs(), 3f32);
+        assert_eq!(3f32.abs(), 3f32);
+    }
 }

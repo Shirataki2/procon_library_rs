@@ -71,7 +71,6 @@ pub mod complex {
     }
 
     impl Neg for Complex { type Output = Complex; fn neg(self) -> Complex { Complex(-self.0, -self.1) } }
-    impl Neg for &Complex { type Output = Complex; fn neg(self) -> Complex { Complex(-self.0, -self.1) } }
 
     impl AddAssign for Complex { fn add_assign(&mut self, rhs: Complex) { self.0 += rhs.0; self.1 += rhs.1; } }
     impl AddAssign<f64> for Complex { fn add_assign(&mut self, rhs: f64) { self.0 += rhs; } }
@@ -241,5 +240,14 @@ mod tests {
         assert!(approx_eq(a.sinh(), Complex(1.959601041421606, -3.165778513216168)));
         assert!(approx_eq(a.cosh(), Complex(2.0327230070196656, -3.0518977991517997)));
         assert!(approx_eq(a.tanh(), Complex(1.0147936161466335, -0.0338128260798967)));
+    }
+
+    #[test]
+    fn test_neg_eq_from() {
+        let i = Complex::i();
+        assert_eq!(-i, Complex(0.0, -1.0));
+        assert_eq!(Complex::from(3.0), Complex(3.0, 0.0));
+        assert_eq!(Complex(1.0, 0.0), 1.0);
+        assert_eq!(1.0, Complex(1.0, 0.0));
     }
 }
