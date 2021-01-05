@@ -1,16 +1,18 @@
 # Rust Competitive Programming Library
 
 ![Test](https://github.com/Shirataki2/procon_library_rs/workflows/Test/badge.svg?branch=main)
-
+[![codecov](https://codecov.io/gh/Shirataki2/procon_library_rs/branch/main/graph/badge.svg?token=hQ2KxSGwfA)](https://codecov.io/gh/Shirataki2/procon_library_rs)
 ## なかみ
 
 - Data Structure
     - Fenwick Tree
         - いわゆるBinary Index Tree
     - Segment Tree
-        - いたって普通のセグ木
+        - セグ木
     - Lazy Segment Tree
-        - 遅延セグメント木
+        - 遅延セグ木
+    - Multiset
+        - 重複を許可したset
     - Skew Heap
         - 結合できる優先度付きキュー
     - Sparse Table
@@ -28,11 +30,11 @@
     - Dijkstra
         - ご存知単一始点最短経路
     - Dinic
-        - 最大流(増加パスのうち最短のものに流す)
+        - 最大流 その1
     - Ford Fulkerson
-        - 最大流(競プロで経路無理数は出ないやろ...)
+        - 最大流 その2
     - Kruskal
-        - 無向グラフの最小全域木
+        - 無向グラフの最小全域木 その1
     - Low Link
         - 橋と関節点
     - Prim
@@ -68,7 +70,7 @@
     - Edit Distance
         - 編集距離
     - Rolling Hash
-        - ロリハ(M=2^61-1でdが原子根だけどこれでいいのか？)
+        - ローリングハッシュ
     - Suffix Array
         - 接尾辞配列(SA-IS)
 
@@ -78,4 +80,4 @@
     - IO
         - 高速な入出力
     - Permutations
-        - next_permutation
+        - next_permutationの実装
