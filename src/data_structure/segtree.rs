@@ -85,4 +85,23 @@ mod tests {
         assert_eq!(seg.query(3, 10), 37);
         assert_eq!(seg.query(4, 6), 9);
     }
+
+    #[test]
+    fn test_small_segtree_sum2() {
+        let mut seg = SegTree::new(
+            10, |&a, &b| a + b, 0
+        );
+        for i in 0..10 {
+            seg.set(i, i);
+        }
+        seg.build();
+        assert_eq!(seg.query(0, 9), 36);
+        assert_eq!(seg.query(3, 10), 42);
+        assert_eq!(seg.query(4, 6), 9);
+        seg.update(6, 1);
+        assert_eq!(seg.query(0, 9), 31);
+        assert_eq!(seg.query(3, 10), 37);
+        assert_eq!(seg.query(4, 6), 9);
+        assert_eq!(seg.get(0), 0);
+    }
 }

@@ -455,4 +455,25 @@ mod tests {
         let g = f.sqrt();
         assert_eq!(g.values(), vec![0, 3, 2, 332748117]);
     }
+
+    #[test]
+    fn test_neg() {
+        let v = vec![5, 4, 3, 2, 1];
+        let v = v.iter().map(|&v| ModInt::<Mod998244353>::new(v)).collect();
+        let f = FPS::<Mod998244353>::new(v);
+        let g = -f;
+        assert_eq!(g.values(), vec![998244348, 998244349, 998244350, 998244351, 998244352]);
+    }
+
+    #[test]
+    fn test_sub() {
+        let v = vec![5, 4, 3, 2, 1];
+        let v = v.iter().map(|&v| ModInt::<Mod998244353>::new(v)).collect();
+        let f = FPS::<Mod998244353>::new(v);
+        let v = vec![1, 2, 3, 4, 5];
+        let v = v.iter().map(|&v| ModInt::<Mod998244353>::new(v)).collect();
+        let g = FPS::<Mod998244353>::new(v);
+        let h = f - g;
+        assert_eq!(h.values(), vec![4, 2, 0, 998244351, 998244349]);
+    }
 }

@@ -487,6 +487,13 @@ mod tests {
     type NTT = NumberTheoreticTransform::<Mod998244353>;
 
     #[test]
+    fn test_mods() {
+        let m = ModInt::<Mod998244353>::new(5);
+        assert_eq!(m.inv().value(), 598946612);
+        assert_eq!((-m).value(), 998244348);
+    }
+
+    #[test]
     fn test_atc001c() {
         let f = vec![0, 1, 2, 3, 4];
         let g = vec![0, 1, 2, 4, 8];

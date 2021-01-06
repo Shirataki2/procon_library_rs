@@ -53,7 +53,7 @@ pub mod trie {
 
     impl<C: CharSet> TrieTree<C> {
         pub fn new() -> Self {
-            let nodes = vec![TrieNode::new()];
+            let nodes = vec![TrieNode::default()];
             Self { nodes, root: 0 }
         }
 
@@ -134,6 +134,24 @@ mod tests {
         let mut trie = TrieTree::<SmallAsciiCharSet>::new();
         let s = "abracadabra".chars().collect::<Vec<_>>();
         let p = vec!["b", "abra", "cad", "rac"];
+        let w = vec![1, 10, 50, 100];
+        p.iter().for_each(|&pi| trie.add(&pi.chars().collect::<Vec<_>>()));
+        let mut dp = vec![0; s.len()+1];
+        let dp_ref = &mut dp;
+        for i in 0..s.len() {
+            trie.query_at(&s, |&idx| {
+                dp_ref[i + p[idx].len()] = std::cmp::max(dp_ref[i + p[idx].len()], dp_ref[i] + w[idx]);
+            }, i, 0);
+            dp_ref[i+1] = std::cmp::max(dp_ref[i + 1], dp_ref[i]);
+        }
+        assert_eq!(dp.last().unwrap(), &111);
+    }
+
+    #[test]
+    fn test_tenka1_large() {
+        let mut trie = TrieTree::<LargeAsciiCharSet>::default();
+        let s = "ABRACADABRA".chars().collect::<Vec<_>>();
+        let p = vec!["B", "ABRA", "CAD", "RAC"];
         let w = vec![1, 10, 50, 100];
         p.iter().for_each(|&pi| trie.add(&pi.chars().collect::<Vec<_>>()));
         let mut dp = vec![0; s.len()+1];

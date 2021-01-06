@@ -71,13 +71,13 @@ pub mod multiset {
         }
     }
 
-    pub struct BTreeMultiSetIterator<'a, T> {
+    pub struct BTreeMultiSetIterator<'a, T: Ord> {
         range: Range<'a, T, usize>,
         item: Option<&'a T>,
         count: usize,
     }
 
-    impl<'a, T> Iterator for BTreeMultiSetIterator<'a, T> {
+    impl<'a, T: Ord> Iterator for BTreeMultiSetIterator<'a, T> {
         type Item = &'a T;
         fn next(&mut self) -> Option<Self::Item> {
             if self.count == 0 {
@@ -92,17 +92,20 @@ pub mod multiset {
         }
     }
 
-    impl<'a, T> std::iter::DoubleEndedIterator for BTreeMultiSetIterator<'a, T> {
+    impl<'a, T: Ord> std::iter::DoubleEndedIterator for BTreeMultiSetIterator<'a, T> {
         fn next_back(&mut self) -> Option<Self::Item> {
-            if self.count == 0 {
+            let item = if self.count == 0 {
                 let (item, count) = self.range.next_back().map(|(k, &v)| (Some(k), v)).unwrap_or((None, 0));
                 self.item = item;
                 self.count = count;
-            }
-            if self.item.is_some() {
+                item
+            } else {
+                self.item
+            };
+            if item.is_some() {
                 self.count -= 1;
             }
-            self.item
+            item
         }
     }
 
@@ -128,9 +131,11 @@ mod tests {
     #[test]
     fn test_from_vec() {
         let v = vec![0, 2, 1, 3, 1, 4, 2, 3, 4, 1];
-        let u = vec![0, 1, 1, 1, 2, 2, 3, 3, 4, 4];
+        let mut u = vec![0, 1, 1, 1, 2, 2, 3, 3, 4, 4];
         let set: BTreeMultiSet<i32> = v.into_iter().collect();
         assert_eq!(set.iter().copied().collect::<Vec<_>>(), u);
+        u.sort_unstable_by_key(|v| -v);
+        assert_eq!(set.iter().rev().copied().collect::<Vec<_>>(), u);
     }
 
     #[test]
@@ -145,7 +150,7 @@ mod tests {
 
     #[test]
     fn test_remove() {
-        let mut set = BTreeMultiSet::new();
+        let mut set = BTreeMultiSet::default();
         set.insert(0);
         set.insert(1);
         set.insert(1);
@@ -156,6 +161,10 @@ mod tests {
         assert_eq!(set.iter().copied().collect::<Vec<_>>(), vec![0, 1, 1, 9]);
         set.remove_all(&1);
         assert_eq!(set.iter().copied().collect::<Vec<_>>(), vec![0, 9]);
+        set.remove_one(&9);
+        assert_eq!(set.iter().copied().collect::<Vec<_>>(), vec![0]);
+        set.remove_one(&9);
+        assert_eq!(set.iter().copied().collect::<Vec<_>>(), vec![0]);
     }
 
     #[test]
