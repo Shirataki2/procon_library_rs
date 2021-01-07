@@ -3,22 +3,22 @@ pub mod trie {
 
     pub trait CharSet {
         fn char_size() -> usize;
-        fn to_int(c: char) -> usize;
+        fn convert(c: char) -> usize;
     }
 
     pub struct LargeAsciiCharSet {}
     impl CharSet for LargeAsciiCharSet {
         fn char_size() -> usize { 26 }
-        fn to_int(c: char) -> usize {
-            ((c as u32) - ('A' as u32)) as usize 
+        fn convert(c: char) -> usize {
+            ((c as u32) - ('A' as u32)) as usize
         }
     }
 
     pub struct SmallAsciiCharSet {}
     impl CharSet for SmallAsciiCharSet {
         fn char_size() -> usize { 26 }
-        fn to_int(c: char) -> usize {
-            ((c as u32) - ('a' as u32)) as usize 
+        fn convert(c: char) -> usize {
+            ((c as u32) - ('a' as u32)) as usize
         }
     }
 
@@ -69,7 +69,7 @@ pub mod trie {
             if str_idx == s.len() {
                 self.update_direct(node_idx, id);
             } else {
-                let c = C::to_int(s[str_idx]);
+                let c = C::convert(s[str_idx]);
                 if self.nodes[node_idx].next[c] == -1 {
                     self.nodes[node_idx].next[c] = self.nodes.len() as isize;
                     self.nodes.push(TrieNode::new());
@@ -90,7 +90,7 @@ pub mod trie {
         pub fn query_at(&mut self, s: &[char], mut f: impl FnMut(&usize), str_idx: usize, node_idx: usize) {
             self.nodes[node_idx].accept.iter().for_each(|&idx| (f)(&idx));
             if str_idx != s.len() {
-                let c = C::to_int(s[str_idx]);
+                let c = C::convert(s[str_idx]);
                 if self.nodes[node_idx].next[c] == -1 { return }
                 self.query_at(s, f, str_idx + 1, self.nodes[node_idx].next[c] as usize)
             }
@@ -122,11 +122,11 @@ mod tests {
 
     #[test]
     fn test_charset() {
-        assert_eq!(LargeAsciiCharSet::to_int('A'), 0);
-        assert_eq!(LargeAsciiCharSet::to_int('C'), 2);
-        assert_eq!(LargeAsciiCharSet::to_int('Z'), 25);
-        assert_eq!(SmallAsciiCharSet::to_int('a'), 0);
-        assert_eq!(SmallAsciiCharSet::to_int('f'), 5);
+        assert_eq!(LargeAsciiCharSet::convert('A'), 0);
+        assert_eq!(LargeAsciiCharSet::convert('C'), 2);
+        assert_eq!(LargeAsciiCharSet::convert('Z'), 25);
+        assert_eq!(SmallAsciiCharSet::convert('a'), 0);
+        assert_eq!(SmallAsciiCharSet::convert('f'), 5);
     }
 
     #[test]

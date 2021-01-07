@@ -47,6 +47,8 @@
         - ワーシャルフロイド
 
 - Math
+    - Algebra
+        - 整数の性質に関するトレイト
     - Complex
         - 複素数
     - Divisor
@@ -73,8 +75,12 @@
         - ローリングハッシュ
     - Suffix Array
         - 接尾辞配列(SA-IS)
+    - Z-Algorithm
+        - Zアルゴリズム
 
 - Utils
+    - Binary Search
+        - 配列用の二分探索
     - Itertools
         - 累積和と組み合わせ(iter拡張)
     - IO
