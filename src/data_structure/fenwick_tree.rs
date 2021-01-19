@@ -34,6 +34,23 @@ pub mod fenwick_tree {
             ret
         }
     }
+
+    impl<T: AbelGroup> FenwickTree<T> {
+        pub fn lower_bound(&self, mut v: T) -> usize {
+            if v <= T::zero() { return 0; }
+            let mut i = 0;
+            let mut k = ((self.data.len() - 1).next_power_of_two() + 1) as i64;
+            while k > 0 {
+                if i + k < self.data.len() as i64 && self.data[(i + k) as usize] < v {
+                    v -= self.data[(i + k) as usize];
+                    i += k;
+                }
+                k >>= 1;
+            }
+            i as usize
+        }
+
+    }
 }
 
 #[cfg(test)]

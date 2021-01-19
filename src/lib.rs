@@ -1,7 +1,5 @@
 #![warn(clippy::all)]
 #![allow(clippy::module_inception)]
-#![feature(test)]
-extern crate test;
 pub mod macros;
 pub mod string;
 pub mod math;

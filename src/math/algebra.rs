@@ -96,11 +96,11 @@ pub mod num_trait {
         ($($name: tt)*) => {$(
             impl Zero for $name {
                 fn zero() -> Self { 0.0 }
-                fn is_zero(&self) -> bool { -$name::EPSILON < *self && $name::EPSILON > *self }
+                fn is_zero(&self) -> bool { -1e-6 < *self && 1e-6 > *self }
             }
             impl One for $name {
                 fn one() -> Self { 1.0 }
-                fn is_one(&self) -> bool { 1.0 - $name::EPSILON < *self && 1.0 + $name::EPSILON > *self }
+                fn is_one(&self) -> bool { 1.0 - 1e-6 < *self && 1.0 + 1e-6 > *self }
             }
             impl Signed for $name {
                 fn abs(&self) -> Self { if self >= &0.0 { *self } else { -self } }

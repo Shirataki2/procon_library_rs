@@ -1,6 +1,6 @@
 pub mod lazy_segtree {
     /// ## Cheetsheet
-    /// 
+    ///
     /// ### Range Minimum Query + Range Add Query
     /// ```no_test
     /// v: [0; n]
@@ -9,7 +9,7 @@ pub mod lazy_segtree {
     /// h(a, b) = a + b
     /// t0 = inf, u0 = 0
     /// ```
-    /// 
+    ///
     /// ### Range Sum Query + Range Add Query
     /// ```no_test
     /// v: [(0, 1); n]
@@ -40,7 +40,12 @@ pub mod lazy_segtree {
             let size = v.len();
             let size = size.next_power_of_two();
             // height = log_2 size
-            let height = (!size).trailing_ones() as usize;
+            let height = {
+                let mut v = 0;
+                let mut sz = size;
+                while sz > 0 { sz >>= 1; v += 1; }
+                v
+            };
             let mut data = vec![t0; 2 * size];
             data[size..(v.len() + size)].clone_from_slice(&v[..]);
             let lazy = vec![u0; 2 * size];
@@ -158,5 +163,25 @@ mod tests {
         seg.update(2, 3, 3);
         assert_eq!(seg.query(0, 2).0, 4);
         assert_eq!(seg.query(1, 3).0, 8);
+    }
+
+    #[test]
+    fn test_raq() {
+        let h = vec![2, 4, 2];
+        let mut seg = LazySegTree::new(
+            h,
+            |&a, &b| a + b,
+            |&a, &b| a + b,
+            |&a, &b| a + b,
+            0, 0
+        );
+        seg.update(0, 2, -2);
+        assert_eq!(seg.query(0, 1), 0);
+        assert_eq!(seg.query(1, 2), 2);
+        assert_eq!(seg.query(2, 3), 2);
+        seg.update(1, 3, 5);
+        assert_eq!(seg.query(0, 1), 0);
+        assert_eq!(seg.query(1, 2), 7);
+        assert_eq!(seg.query(2, 3), 7);
     }
 }

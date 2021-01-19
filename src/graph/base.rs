@@ -33,6 +33,11 @@ pub mod graph {
             self[from].push(Edge::new(to, cost));
             self[to].push(Edge::new(from, cost));
         }
+
+        pub fn add_unweighted_edge(&mut self, from: usize, to: usize) {
+            self[from].push(Edge::new(to, T::zero()));
+            self[to].push(Edge::new(from, T::zero()));
+        }
     }
 
     impl<T> Index<usize> for Graph<T> {

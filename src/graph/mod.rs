@@ -9,3 +9,4 @@ pub mod strongly_connected_components;
 pub mod topological_sort;
 pub mod ford_fulkerson;
 pub mod dinic;
+pub mod hl_decomposition;

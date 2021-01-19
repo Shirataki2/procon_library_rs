@@ -221,15 +221,15 @@ mod tests {
         });
     }
 
-    #[bench]
-    fn bench_naive_suffix_array(b: &mut test::Bencher) {
-        let s = rand_str(50000);
-        b.iter(|| naive_suffix_array(&s));
-    }
+    // #[bench]
+    // fn bench_naive_suffix_array(b: &mut test::Bencher) {
+    //     let s = rand_str(50000);
+    //     b.iter(|| naive_suffix_array(&s));
+    // }
 
-    #[bench]
-    fn bench_sais_suffix_array(b: &mut test::Bencher) {
-        let s = rand_str(50000);
-        b.iter(|| SuffixArray::new(&s));
-    }
+    // #[bench]
+    // fn bench_sais_suffix_array(b: &mut test::Bencher) {
+    //     let s = rand_str(50000);
+    //     b.iter(|| SuffixArray::new(&s));
+    // }
 }
