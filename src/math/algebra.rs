@@ -26,6 +26,12 @@ pub mod num_trait {
         fn max_value() -> Self;
     }
 
+    pub trait BaseNumber {}
+    pub trait BaseInteger: BaseNumber {}
+    pub trait BaseFloating: BaseNumber {
+        fn sqrt(value: Self) -> Self;
+    }
+
     pub trait Elem: Sized + Copy + Clone + PartialEq {}
     impl<T: Sized + Clone + Copy + PartialEq> Elem for T {}
 
@@ -76,6 +82,8 @@ pub mod num_trait {
                 fn max_value() -> Self { std::$name::MAX }
             }
             impl Associative for $name {}
+            impl BaseNumber for $name {}
+            impl BaseInteger for $name {}
         )*};
     }
     macro_rules! signed_int_primitives {
@@ -112,6 +120,10 @@ pub mod num_trait {
                 fn max_value() -> Self { std::$name::MAX }
             }
             impl Associative for $name {}
+            impl BaseNumber for $name {}
+            impl BaseFloating for $name {
+                fn sqrt(value: Self) -> Self { value.sqrt() }
+            }
         )*};
     }
 

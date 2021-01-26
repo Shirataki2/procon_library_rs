@@ -36,3 +36,19 @@ macro_rules! outln { ($io: expr) => { $io.write("\n".to_string()); }; ($io: expr
 
 #[macro_export]
 macro_rules! out { ($io: expr => $fmt: expr) => {$io.write(format!($fmt, "\n"))}; ($io: expr => $fmt: expr, $($arg: tt)*) => { $io.write(format!($fmt, $($arg)*)); }; }
+
+#[macro_export]
+macro_rules! matrix {
+    ($($x: expr, $y: expr)=>*) => {
+        [$(Vector2d::new([$x, $y])),*]
+    };
+    ($($x: expr, $y: expr, $z: expr)=>*) => {
+        [$(Vector3d::new([$x, $y, $z])),*]
+    };
+    ($($w: expr, $x: expr, $y: expr, $z: expr)=>*) => {
+        [$(Vector4d::new([$w, $x, $y, $z])),*]
+    };
+    ($($($x: expr),*);*) => {
+        matrix!($($($x),*)=>*).into()
+    };
+}

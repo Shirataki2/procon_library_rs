@@ -8,3 +8,4 @@ pub mod complex;
 pub mod fft;
 pub mod ntt;
 pub mod fps;
+pub mod linear_algebra;
