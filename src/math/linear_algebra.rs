@@ -35,7 +35,7 @@ pub mod linalg {
         Self: Mul<<Self as VectorSpace>::Scalar, Output=Self>,
         Self: Div<<Self as VectorSpace>::Scalar, Output=Self>,
     {
-        type Scalar: Signed;
+        type Scalar: Signed + Copy;
 
         #[inline]
         fn lerp(self, other: Self, t: Self::Scalar) -> Self {
@@ -93,7 +93,7 @@ pub mod linalg {
         Self: Mul<<Self as EuclideanSpace>::Scalar, Output=Self>,
         Self: Div<<Self as EuclideanSpace>::Scalar, Output=Self>,
     {
-        type Scalar: BaseNumber;
+        type Scalar: BaseNumber + Copy + Signed;
         type Diff: VectorSpace<Scalar=Self::Scalar>;
 
         fn origin(self) -> Self;
@@ -141,7 +141,7 @@ pub mod linalg {
         fn inv(&self) -> Option<Self>;
 
         fn len() -> usize { Self::len_row() }
-        fn eye(self) -> Self {
+        fn eye() -> Self {
             let mut res = Self::zero();
             for i in 0..Self::len_row() {
                 res[i][i] = Self::Scalar::one();
@@ -873,6 +873,7 @@ pub mod linalg {
         tmp
     }
 }
+
 
 #[cfg(test)]
 mod tests {
