@@ -2,6 +2,7 @@ use crate::math::algebra::num_trait;
 
 pub mod linalg {
     use std::ops::*;
+    use std::fmt;
     use super::num_trait::*;
 
     pub trait Array
@@ -35,7 +36,7 @@ pub mod linalg {
         Self: Mul<<Self as VectorSpace>::Scalar, Output=Self>,
         Self: Div<<Self as VectorSpace>::Scalar, Output=Self>,
     {
-        type Scalar: Signed + Copy;
+        type Scalar: Copy;
 
         #[inline]
         fn lerp(self, other: Self, t: Self::Scalar) -> Self {
@@ -93,7 +94,7 @@ pub mod linalg {
         Self: Mul<<Self as EuclideanSpace>::Scalar, Output=Self>,
         Self: Div<<Self as EuclideanSpace>::Scalar, Output=Self>,
     {
-        type Scalar: BaseNumber + Copy + Signed;
+        type Scalar: BaseNumber + Copy;
         type Diff: VectorSpace<Scalar=Self::Scalar>;
 
         fn origin(self) -> Self;
@@ -157,7 +158,7 @@ pub mod linalg {
         }
     }
 
-    impl<T: Field + Signed> Vector3d<T> {
+    impl<T: Field> Vector3d<T> {
         pub fn cross(self, rhs: Self) -> Self {
             Self::new([
                 self[1] * rhs[2] - self[2] * rhs[1],
@@ -167,7 +168,7 @@ pub mod linalg {
         }
     }
 
-    impl<T: Field+ Signed> SqMatrix for Matrix2x2<T> {
+    impl<T: Field> SqMatrix for Matrix2x2<T> {
         type ColumnRow = Vector2d<T>;
 
         fn det(&self) -> T {
@@ -186,7 +187,7 @@ pub mod linalg {
         }
     }
 
-    impl<T: Field+ Signed> SqMatrix for Matrix3x3<T> {
+    impl<T: Field> SqMatrix for Matrix3x3<T> {
         type ColumnRow = Vector3d<T>;
 
         fn det(&self) -> T {
@@ -208,7 +209,7 @@ pub mod linalg {
         }
     }
 
-    impl<T: Field + Signed + BaseFloating> SqMatrix for Matrix4x4<T> {
+    impl<T: Field + BaseFloating> SqMatrix for Matrix4x4<T> {
         type ColumnRow = Vector4d<T>;
 
         fn det(&self) -> T {
@@ -232,6 +233,118 @@ pub mod linalg {
         }
     }
 
+    pub struct VectorIterator<'a, V, T>
+    where
+        V: VectorSpace<Scalar=T> + Array<Elem=T>
+    {
+        v: &'a V,
+        idx: usize,
+    }
+
+    impl<'a, V, T: 'a> Iterator for VectorIterator<'a, V, T>
+    where
+        V: VectorSpace<Scalar=T> + Array<Elem=T>,
+        T: Copy
+    {
+        type Item = &'a T;
+        fn next(&mut self) -> Option<Self::Item> {
+            if self.idx < V::len() {
+                let v = &self.v[self.idx];
+                self.idx += 1;
+                Some(v)
+            } else {
+                None
+            }
+        }
+    }
+
+    pub struct VectorIntoIterator<V, T>
+    where
+        V: VectorSpace<Scalar=T> + Array<Elem=T>
+    {
+        v: V,
+        idx: usize,
+    }
+
+    impl<V, T> Iterator for VectorIntoIterator<V, T>
+    where
+        V: VectorSpace<Scalar=T> + Array<Elem=T>,
+        T: Copy
+    {
+        type Item = T;
+        fn next(&mut self) -> Option<Self::Item> {
+            if self.idx < V::len() {
+                let v = self.v[self.idx];
+                self.idx += 1;
+                Some(v)
+            } else {
+                None
+            }
+        }
+    }
+
+    pub struct MatrixIterator<'a, M, T>
+    where
+        T: Field,
+        M: Matrix<Scalar=T>
+    {
+        m: &'a M,
+        row: usize,
+        col: usize,
+    }
+
+    impl<'a, M, T: 'a> Iterator for MatrixIterator<'a, M, T>
+    where
+        M: Matrix<Scalar=T>,
+        T: Field + Copy
+    {
+        type Item = &'a T;
+        fn next(&mut self) -> Option<Self::Item> {
+            if self.row < M::Row::len() {
+                let v = &self.m[self.row][self.col];
+                self.col += 1;
+                if self.col == M::Column::len() {
+                    self.row += 1;
+                    self.col = 0;
+                }
+                Some(v)
+            } else {
+                None
+            }
+        }
+    }
+
+    pub struct MatrixIntoIterator<M, T>
+    where
+        T: Field,
+        M: Matrix<Scalar=T>
+    {
+        m: M,
+        row: usize,
+        col: usize,
+    }
+
+    impl<M, T> Iterator for MatrixIntoIterator<M, T>
+    where
+        M: Matrix<Scalar=T>,
+        T: Field + Copy
+    {
+        type Item = T;
+        fn next(&mut self) -> Option<Self::Item> {
+            if self.row < M::Row::len() {
+                let v = self.m[self.row][self.col];
+                self.col += 1;
+                if self.col == M::Column::len() {
+                    self.row += 1;
+                    self.col = 0;
+                }
+                Some(v)
+            } else {
+                None
+            }
+        }
+    }
+
     macro_rules! define_vector {
         ($Name: ident, $dim: expr) => {
             #[derive(Copy, Clone, Debug, PartialEq)]
@@ -243,6 +356,34 @@ pub mod linalg {
             }
             impl<T> IndexMut<usize> for $Name<T> {
                 fn index_mut(&mut self, i: usize) -> &mut T { &mut self.0[i] }
+            }
+
+            impl<T: Field> IntoIterator for $Name<T> {
+                type Item = T;
+                type IntoIter = VectorIntoIterator<$Name<T>, T>;
+
+                fn into_iter(self) -> Self::IntoIter {
+                    VectorIntoIterator {
+                        v: self,
+                        idx: 0
+                    }
+                }
+            }
+
+            impl<T: fmt::Display> fmt::Display for $Name<T>
+            where
+                Self: Array<Elem=T>
+            {
+                fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                    write!(f, "[")?;
+                    for i in 0..Self::len() {
+                        write!(f, "{}", self[i])?;
+                        if i != Self::len() - 1 {
+                            write!(f, ", ")?;
+                        }
+                    }
+                    write!(f, "]")
+                }
             }
 
             impl<T: Monoid> Zero for $Name<T>
@@ -258,6 +399,64 @@ pub mod linalg {
                         b &= self[i] == T::zero();
                     }
                     b
+                }
+            }
+
+            impl<T: Group> Neg for $Name<T>
+            where
+                Self: Array<Elem=T>,
+            {
+                type Output = Self;
+                fn neg(self) -> Self::Output {
+                    let mut res = self;
+                    for i in 0..Self::len() {
+                        res[i] = -self[i];
+                    }
+                    res
+                }
+            }
+
+            impl<T: ComMonoid> AddAssign<Self> for $Name<T>
+            where
+                Self: Array<Elem=T>,
+            {
+                fn add_assign(&mut self, rhs: Self) {
+                    for i in 0..Self::len() {
+                        self[i] += rhs[i];
+                    }
+                }
+            }
+
+            impl<T: AbelGroup> SubAssign<Self> for $Name<T>
+            where
+                Self: Array<Elem=T>,
+            {
+                fn sub_assign(&mut self, rhs: Self) {
+                    for i in 0..Self::len() {
+                        self[i] -= rhs[i];
+                    }
+                }
+            }
+
+            impl<T: Field> MulAssign<<Self as VectorSpace>::Scalar> for $Name<T>
+            where
+                Self: Array<Elem=T>,
+            {
+                fn mul_assign(&mut self, rhs: <Self as VectorSpace>::Scalar) {
+                    for i in 0..Self::len() {
+                        self[i] *= rhs;
+                    }
+                }
+            }
+
+            impl<T: Field> DivAssign<<Self as VectorSpace>::Scalar> for $Name<T>
+            where
+                Self: Array<Elem=T>,
+            {
+                fn div_assign(&mut self, rhs: <Self as VectorSpace>::Scalar) {
+                    for i in 0..Self::len() {
+                        self[i] /= rhs;
+                    }
                 }
             }
 
@@ -289,8 +488,7 @@ pub mod linalg {
                 }
             }
 
-            #[allow(clippy::assign_op_pattern)]
-            impl<T: Field + Signed> Mul<<Self as VectorSpace>::Scalar> for $Name<T>
+            impl<T: Field> Mul<<Self as VectorSpace>::Scalar> for $Name<T>
             where
                 Self: Array<Elem=T>,
             {
@@ -298,14 +496,14 @@ pub mod linalg {
                 fn mul(self, rhs: <Self as VectorSpace>::Scalar) -> Self::Output {
                     let mut res = self;
                     for i in 0..Self::len() {
-                        res[i] = res[i] * rhs;
+                        res[i] *= rhs;
                     }
                     res
                 }
             }
 
             #[allow(clippy::assign_op_pattern)]
-            impl<T: Field + Signed> Div<<Self as VectorSpace>::Scalar> for $Name<T>
+            impl<T: Field> Div<<Self as VectorSpace>::Scalar> for $Name<T>
             where
                 Self: Array<Elem=T>,
             {
@@ -313,7 +511,7 @@ pub mod linalg {
                 fn div(self, rhs: <Self as VectorSpace>::Scalar) -> Self::Output {
                     let mut res = self;
                     for i in 0..Self::len() {
-                        res[i] = res[i] / rhs;
+                        res[i] /= rhs;
                     }
                     res
                 }
@@ -335,11 +533,11 @@ pub mod linalg {
                 }
             }
 
-            impl<T: Field + Signed> VectorSpace for $Name<T> {
+            impl<T: Field> VectorSpace for $Name<T> {
                 type Scalar = T;
             }
 
-            impl<T: Field + Signed + BaseFloating> MetricSpace for $Name<T>
+            impl<T: Field + BaseFloating> MetricSpace for $Name<T>
             where
                 Self: Array<Elem=T>
             {
@@ -354,7 +552,7 @@ pub mod linalg {
                 }
             }
 
-            impl<T: Field + Signed + BaseFloating> InnerSpace for $Name<T>
+            impl<T: Field + BaseFloating> InnerSpace for $Name<T>
             where
                 Self: MetricSpace<Metric=T>
             {
@@ -367,7 +565,7 @@ pub mod linalg {
                 }
             }
 
-            impl<T: Field + Signed + BaseFloating> EuclideanSpace for $Name<T>
+            impl<T: Field + BaseFloating> EuclideanSpace for $Name<T>
             where
                 Self: VectorSpace<Scalar=T>
             {
@@ -387,9 +585,16 @@ pub mod linalg {
                 }
             }
 
-            impl<T: Field + Signed> $Name<T> {
+            impl<T: Field> $Name<T> {
                 pub fn new(v: [T; $dim]) -> Self {
                     Self(v)
+                }
+
+                pub fn iter(&self) -> VectorIterator<Self, T> {
+                    VectorIterator {
+                        v: self,
+                        idx: 0
+                    }
                 }
 
                 pub fn add_elementwise(self, rhs: Self) -> Self {
@@ -437,12 +642,88 @@ pub mod linalg {
                 fn index_mut(&mut self, i: usize) -> &mut Self::Output { &mut self.0[i] }
             }
 
+            impl<T: Field> IntoIterator for $Name<T>
+            where
+                T: Field + Copy
+            {
+                type Item = T;
+                type IntoIter = MatrixIntoIterator<Self, T>;
+
+                fn into_iter(self) -> Self::IntoIter {
+                    MatrixIntoIterator {
+                        m: self,
+                        row: 0,
+                        col: 0,
+                    }
+                }
+            }
+
+            impl<T: Field + fmt::Display, C> fmt::Display for $Name<T>
+            where
+                Self: Matrix<Scalar=T, Column=C>,
+                C: fmt::Display
+            {
+                fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                    write!(f, "[")?;
+                    for i in 0..Self::len_row() {
+                        write!(f, "{}", self[i])?;
+                        if i != Self::len_row() - 1 {
+                            write!(f, ", ")?;
+                        }
+                    }
+                    write!(f, "]")
+                }
+            }
+
             impl<T: Monoid> Zero for $Name<T> {
                 fn zero() -> $Name<T> {
                     $Name([$ColVector::zero(); $row])
                 }
                 fn is_zero(&self) -> bool { true }
             }
+
+            impl<T: ComMonoid> AddAssign<Self> for $Name<T>
+            {
+                fn add_assign(&mut self, rhs: Self) {
+                    for i in 0..$row {
+                        for j in 0..$col {
+                            self[i][j] += rhs[i][j];
+                        }
+                    }
+                }
+            }
+
+            impl<T: AbelGroup> SubAssign<Self> for $Name<T>
+            {
+                fn sub_assign(&mut self, rhs: Self) {
+                    for i in 0..$row {
+                        for j in 0..$col {
+                            self[i][j] -= rhs[i][j];
+                        }
+                    }
+                }
+            }
+
+            #[allow(clippy::assign_op_pattern)]
+            impl<T: Field> MulAssign<<Self as VectorSpace>::Scalar> for $Name<T>
+            {
+                fn mul_assign(&mut self, rhs: <Self as VectorSpace>::Scalar) {
+                    for i in 0..$row {
+                        self[i] *= rhs;
+                    }
+                }
+            }
+
+            #[allow(clippy::assign_op_pattern)]
+            impl<T: Field> DivAssign<<Self as VectorSpace>::Scalar> for $Name<T>
+            {
+                fn div_assign(&mut self, rhs: <Self as VectorSpace>::Scalar) {
+                    for i in 0..$row {
+                        self[i] /= rhs;
+                    }
+                }
+            }
+
 
             impl<T: Magma> Add<Self> for $Name<T>
             {
@@ -471,7 +752,7 @@ pub mod linalg {
             }
 
             #[allow(clippy::assign_op_pattern)]
-            impl<T: Field + Signed> Mul<<Self as VectorSpace>::Scalar> for $Name<T>
+            impl<T: Field> Mul<<Self as VectorSpace>::Scalar> for $Name<T>
             {
                 type Output = Self;
                 fn mul(self, rhs: <Self as VectorSpace>::Scalar) -> Self::Output {
@@ -484,7 +765,7 @@ pub mod linalg {
             }
 
             #[allow(clippy::assign_op_pattern)]
-            impl<T: Field + Signed> Div<<Self as VectorSpace>::Scalar> for $Name<T>
+            impl<T: Field> Div<<Self as VectorSpace>::Scalar> for $Name<T>
             {
                 type Output = Self;
                 fn div(self, rhs: <Self as VectorSpace>::Scalar) -> Self::Output {
@@ -496,47 +777,57 @@ pub mod linalg {
                 }
             }
 
-            impl<T: Field + Signed> VectorSpace for $Name<T> {
+            impl<T: Field> VectorSpace for $Name<T> {
                 type Scalar = T;
             }
 
-            impl<T: Field + Signed> $Name<T> {
+            impl<T: Field> $Name<T> {
                 pub fn new(v: [$ColVector<T>; $row]) -> Self {
                     Self(v)
                 }
             }
 
-            impl<T: Field + Signed> From<[$ColVector<T>; $row]> for $Name<T> {
+            impl<T: Field> From<[$ColVector<T>; $row]> for $Name<T> {
                 fn from(v: [$ColVector<T>; $row]) -> Self {
                     Self::new(v)
                 }
             }
 
             #[allow(clippy::transmute_ptr_to_ptr)]
-            impl<T: Field + Signed> AsRef<[[T; $col]; $row]> for $Name<T> {
+            impl<T: Field> AsRef<[[T; $col]; $row]> for $Name<T> {
                 fn as_ref(&self) -> &[[T; $col]; $row] {
                     unsafe { std::mem::transmute(self) }
                 }
             }
 
             #[allow(clippy::transmute_ptr_to_ptr)]
-            impl<T: Field + Signed> AsMut<[[T; $col]; $row]> for $Name<T> {
+            impl<T: Field> AsMut<[[T; $col]; $row]> for $Name<T> {
                 fn as_mut(&mut self) -> &mut [[T; $col]; $row] {
                     unsafe { std::mem::transmute(self) }
                 }
             }
 
             #[allow(clippy::transmute_ptr_to_ptr)]
-            impl<T: Field + Signed> AsRef<[T; ($col * $row)]> for $Name<T> {
+            impl<T: Field> AsRef<[T; ($col * $row)]> for $Name<T> {
                 fn as_ref(&self) -> &[T; ($col * $row)] {
                     unsafe { std::mem::transmute(self) }
                 }
             }
 
             #[allow(clippy::transmute_ptr_to_ptr)]
-            impl<T: Field + Signed> AsMut<[T; ($col * $row)]> for $Name<T> {
+            impl<T: Field> AsMut<[T; ($col * $row)]> for $Name<T> {
                 fn as_mut(&mut self) -> &mut [T; ($col * $row)] {
                     unsafe { std::mem::transmute(self) }
+                }
+            }
+
+            impl<T: Field> $Name<T> {
+                pub fn iter(&self) -> MatrixIterator<Self, T> {
+                    MatrixIterator {
+                        m: self,
+                        row: 0,
+                        col: 0,
+                    }
                 }
             }
         };
@@ -544,7 +835,7 @@ pub mod linalg {
 
     macro_rules! impl_mat_mat_inner_product {
         ($Left:ident, $Right:ident, $Output: ident) => {
-            impl<T: Field + Signed> Mul<$Right<T>> for $Left<T> {
+            impl<T: Field> Mul<$Right<T>> for $Left<T> {
                 type Output = $Output<T>;
                 fn mul(self, rhs: $Right<T>) -> $Output<T> {
                     let mut res = $Output::<T>::zero();
@@ -563,9 +854,29 @@ pub mod linalg {
         }
     }
 
+    macro_rules! impl_sqmat_assign_inner_product {
+        ($M:ident) => {
+            impl<T: Field> MulAssign<$M<T>> for $M<T> {
+                fn mul_assign(&mut self, rhs: $M<T>) {
+                    let mut res = $M::<T>::zero();
+                    for i in 0..$M::<T>::len_row() {
+                        for j in 0..$M::<T>::len_col() {
+                            let mut s = T::zero();
+                            for k in 0..$M::<T>::len_row() {
+                                s += self[i][k] * rhs[k][j];
+                            }
+                            res[i][j] = s;
+                        }
+                    }
+                    *self = res;
+                }
+            }
+        }
+    }
+
     macro_rules! impl_mat_vec_inner_product {
         ($Left:ident, $Right:ident, $Output: ident) => {
-            impl<T: Field + Signed> Mul<$Right<T>> for $Left<T> {
+            impl<T: Field> Mul<$Right<T>> for $Left<T> {
                 type Output = $Output<T>;
                 fn mul(self, rhs: $Right<T>) -> $Output<T> {
                     let mut res = $Output::<T>::zero();
@@ -575,6 +886,21 @@ pub mod linalg {
                             s += self[i][j] * rhs[j];
                         }
                         res[i] = s;
+                    }
+                    res
+                }
+            }
+        }
+    }
+
+    macro_rules! impl_vec_vec_inner_product {
+        ($V:ident) => {
+            impl<T: Field> Mul<$V<T>> for $V<T> {
+                type Output = T;
+                fn mul(self, rhs: $V<T>) -> T {
+                    let mut res = T::zero();
+                    for i in 0..$V::<T>::len() {
+                        res += self[i] * rhs[i];
                     }
                     res
                 }
@@ -598,6 +924,10 @@ pub mod linalg {
     define_matrix!(Matrix4x3, 4, 3, Vector4d, Vector3d, Matrix3x4);
     define_matrix!(Matrix4x4, 4, 4, Vector4d, Vector4d, Matrix4x4);
 
+    impl_vec_vec_inner_product!(Vector2d);
+    impl_vec_vec_inner_product!(Vector3d);
+    impl_vec_vec_inner_product!(Vector4d);
+
     impl_mat_vec_inner_product!(Matrix2x2, Vector2d, Vector2d);
     impl_mat_vec_inner_product!(Matrix2x3, Vector3d, Vector2d);
     impl_mat_vec_inner_product!(Matrix2x4, Vector4d, Vector2d);
@@ -609,6 +939,10 @@ pub mod linalg {
     impl_mat_vec_inner_product!(Matrix4x2, Vector2d, Vector4d);
     impl_mat_vec_inner_product!(Matrix4x3, Vector3d, Vector4d);
     impl_mat_vec_inner_product!(Matrix4x4, Vector4d, Vector4d);
+
+    impl_sqmat_assign_inner_product!(Matrix2x2);
+    impl_sqmat_assign_inner_product!(Matrix3x3);
+    impl_sqmat_assign_inner_product!(Matrix4x4);
 
     impl_mat_mat_inner_product!(Matrix2x2, Matrix2x2, Matrix2x2);
     impl_mat_mat_inner_product!(Matrix2x3, Matrix3x2, Matrix2x2);
@@ -646,7 +980,7 @@ pub mod linalg {
     impl_mat_mat_inner_product!(Matrix4x3, Matrix3x4, Matrix4x4);
     impl_mat_mat_inner_product!(Matrix4x4, Matrix4x4, Matrix4x4);
 
-    impl<T: Field + Signed> Matrix for Matrix2x2<T> {
+    impl<T: Field> Matrix for Matrix2x2<T> {
         type Row = Vector2d<T>;
         type Column = Vector2d<T>;
         type Transpose = Matrix2x2<T>;
@@ -662,7 +996,7 @@ pub mod linalg {
         }
     }
 
-    impl<T: Field + Signed> Matrix for Matrix2x3<T> {
+    impl<T: Field> Matrix for Matrix2x3<T> {
         type Row = Vector2d<T>;
         type Column = Vector3d<T>;
         type Transpose = Matrix3x2<T>;
@@ -679,7 +1013,7 @@ pub mod linalg {
         }
     }
 
-    impl<T: Field + Signed> Matrix for Matrix2x4<T> {
+    impl<T: Field> Matrix for Matrix2x4<T> {
         type Row = Vector2d<T>;
         type Column = Vector4d<T>;
         type Transpose = Matrix4x2<T>;
@@ -697,7 +1031,7 @@ pub mod linalg {
         }
     }
 
-    impl<T: Field + Signed> Matrix for Matrix3x2<T> {
+    impl<T: Field> Matrix for Matrix3x2<T> {
         type Row = Vector3d<T>;
         type Column = Vector2d<T>;
         type Transpose = Matrix2x3<T>;
@@ -713,7 +1047,7 @@ pub mod linalg {
         }
     }
 
-    impl<T: Field + Signed> Matrix for Matrix3x3<T> {
+    impl<T: Field> Matrix for Matrix3x3<T> {
         type Row = Vector3d<T>;
         type Column = Vector3d<T>;
         type Transpose = Matrix3x3<T>;
@@ -730,7 +1064,7 @@ pub mod linalg {
         }
     }
 
-    impl<T: Field + Signed> Matrix for Matrix3x4<T> {
+    impl<T: Field> Matrix for Matrix3x4<T> {
         type Row = Vector3d<T>;
         type Column = Vector4d<T>;
         type Transpose = Matrix4x3<T>;
@@ -748,7 +1082,7 @@ pub mod linalg {
         }
     }
 
-    impl<T: Field + Signed> Matrix for Matrix4x2<T> {
+    impl<T: Field> Matrix for Matrix4x2<T> {
         type Row = Vector4d<T>;
         type Column = Vector2d<T>;
         type Transpose = Matrix2x4<T>;
@@ -764,7 +1098,7 @@ pub mod linalg {
         }
     }
 
-    impl<T: Field + Signed> Matrix for Matrix4x3<T> {
+    impl<T: Field> Matrix for Matrix4x3<T> {
         type Row = Vector4d<T>;
         type Column = Vector3d<T>;
         type Transpose = Matrix3x4<T>;
@@ -781,7 +1115,7 @@ pub mod linalg {
         }
     }
 
-    impl<T: Field + Signed> Matrix for Matrix4x4<T> {
+    impl<T: Field> Matrix for Matrix4x4<T> {
         type Row = Vector4d<T>;
         type Column = Vector4d<T>;
         type Transpose = Matrix4x4<T>;
@@ -801,7 +1135,7 @@ pub mod linalg {
 
     #[inline]
     #[allow(clippy::many_single_char_names)]
-    unsafe fn det_sub_proc_unsafe<T: Field + Signed>(
+    unsafe fn det_sub_proc_unsafe<T: Field>(
         m: &Matrix4x4<T>,
         x: usize,
         y: usize,
@@ -865,11 +1199,11 @@ pub mod linalg {
             *s.get_unchecked(4 + z),
         ]);
         let mut tmp = a.mul_elementwise(b.mul_elementwise(c));
-        tmp = tmp + d.mul_elementwise(e.mul_elementwise(f));
-        tmp = tmp + g.mul_elementwise(h.mul_elementwise(i));
-        tmp = tmp - a.mul_elementwise(e.mul_elementwise(i));
-        tmp = tmp - d.mul_elementwise(h.mul_elementwise(c));
-        tmp = tmp - g.mul_elementwise(b.mul_elementwise(f));
+        tmp += d.mul_elementwise(e.mul_elementwise(f));
+        tmp += g.mul_elementwise(h.mul_elementwise(i));
+        tmp -= a.mul_elementwise(e.mul_elementwise(i));
+        tmp -= d.mul_elementwise(h.mul_elementwise(c));
+        tmp -= g.mul_elementwise(b.mul_elementwise(f));
         tmp
     }
 }
@@ -955,5 +1289,55 @@ mod tests {
         let m1: Matrix4x4<f64> = matrix!(2.0, -4.0, 1.0, -1.0; 2.0, -2.0, 1.0, -1.0; 1.0, -1.0, 0.0, 2.0; 0.0, 0.0, 0.0, 1.0);
         let m2: Matrix4x4<f64> = matrix!(-1.0, 1.0, 2.0, -4.0; -1.0, 1.0, 0.0, 0.0; 0.0, 2.0, -4.0, 10.0; 0.0, 0.0, 0.0, 2.0);
         assert_eq!(m1.inv(), Some(m2 / 2.0));
+    }
+
+    #[test]
+    fn test_vector_iter() {
+        let v1: Vector4d<i64> = matrix![3, 5, 7, 9];
+        for (i, v) in v1.iter().enumerate() {
+            assert_eq!(3 + 2 * i as i64, *v);
+        }
+
+        assert_eq!(v1.iter().sum::<i64>(), 24);
+        assert_eq!(v1.iter().product::<i64>(), 945);
+
+        let v1: Vector4d<i64> = matrix![3, 3, 3, 3];
+        for v in v1 {
+            assert_eq!(3, v);
+        }
+    }
+
+    #[test]
+    fn test_matrix_iter() {
+        let m1: Matrix3x3<i64> = matrix![1, 2, 3; 4, 5, 6; 7, 8, 9];
+        for (i, v) in m1.iter().enumerate() {
+            assert_eq!(i as i64 + 1, *v);
+        }
+
+        assert_eq!(m1.iter().sum::<i64>(), 45);
+        assert_eq!(m1.iter().product::<i64>(), 362880);
+
+        let m1: Matrix2x2<i64> = matrix![3, 3; 3, 3];
+        for v in m1 {
+            assert_eq!(3, v);
+        }
+    }
+
+    #[test]
+    fn test_format() {
+        let v: Vector3d<i32> = matrix![3, 5, 2];
+        assert_eq!(format!("{}", v), "[3, 5, 2]");
+
+        let m: Matrix2x2<i32> = matrix![3, 5; 1, 2];
+        assert_eq!(format!("{}", m), "[[3, 5], [1, 2]]");
+    }
+
+    #[test]
+    fn test_dist() {
+        let v: Vector2d<f32> = matrix![3.0, 4.0];
+        assert_eq!(v.magnitude(), 5.0);
+
+        let v: Vector3d<f32> = matrix![3.0, 4.0, 12.0];
+        assert_eq!(v.magnitude(), 13.0);
     }
 }

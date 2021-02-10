@@ -28,8 +28,49 @@ pub mod num_trait {
 
     pub trait BaseNumber {}
     pub trait BaseInteger: BaseNumber {}
-    pub trait BaseFloating: BaseNumber {
-        fn sqrt(value: Self) -> Self;
+
+    macro_rules! fn_float {
+        ($($f: ident)*) => {
+            $(fn $f(self) -> Self;)*
+        };
+    }
+
+    macro_rules! impl_float {
+        ($($f: ident)*) => {
+            $(
+                #[allow(unconditional_recursion)]
+                fn $f(self) -> Self { self.$f() }
+            )*
+        };
+    }
+
+    pub trait BaseFloating: BaseNumber + Field + Rem<Output=Self> + RemAssign {
+        fn_float!(
+            float ceil round trunc fract abs signum sqrt
+            exp exp2 ln log2 log10 cbrt sin cos tan
+            asin acos atan exp_m1 ln_1p sinh cosh tanh
+            asinh acosh atanh recip to_degrees to_radians
+        );
+
+        fn sin_cos(&self) -> (Self, Self);
+        fn atan2(&self, rhs: Self) -> Self;
+
+        fn eps() -> Self;
+        fn pi() -> Self;
+        fn pi_deg() -> Self;
+        fn tau() -> Self;
+        fn tau_deg() -> Self;
+
+        fn approx_eq(self, rhs: Self) -> bool {
+            if self == Self::zero() {
+                rhs.abs() < Self::eps()
+            } else if rhs == Self::zero() {
+                self.abs() < Self::eps()
+            } else {
+                let (x, y) = (self.abs(), rhs.abs());
+                (x - y).abs() / (if x < y { x } else { y }) < Self::eps()
+            }
+        }
     }
 
     pub trait Elem: Sized + Copy + Clone + PartialEq {}
@@ -122,7 +163,25 @@ pub mod num_trait {
             impl Associative for $name {}
             impl BaseNumber for $name {}
             impl BaseFloating for $name {
-                fn sqrt(value: Self) -> Self { value.sqrt() }
+                impl_float!(
+                    float ceil round trunc fract abs signum sqrt
+                    exp exp2 ln log2 log10 cbrt sin cos tan
+                    asin acos atan exp_m1 ln_1p sinh cosh tanh
+                    asinh acosh atanh recip to_degrees to_radians
+                );
+
+                #[allow(unconditional_recursion)]
+                fn sin_cos(&self) -> (Self, Self) {
+                    self.sin_cos()
+                }
+
+                #[allow(unconditional_recursion)]
+                fn atan2(&self, rhs: Self) -> Self { self.atan2(rhs) }
+                fn eps() -> Self { std::$name::EPSILON }
+                fn pi() -> Self { std::$name::consts::PI }
+                fn pi_deg() -> Self { 180.0 }
+                fn tau() -> Self { std::$name::consts::PI * 2.0 }
+                fn tau_deg() -> Self { 360.0 }
             }
         )*};
     }
